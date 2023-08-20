@@ -1,0 +1,45 @@
+<mxfile host="app.diagrams.net" modified="2023-08-20T16:39:45.650Z" agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/116.0.0.0 Safari/537.36 " etag="_3mccPvKPEhszBLiag6e" version="21.6.8" type="github">
+  <diagram name="Page-1" id="RkhA-cvP_Ylwptsd7p7W">
+    <mxGraphModel dx="3020" dy="1042" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="850" pageHeight="1100" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="SENzT0TBGtRkfwnPn_zZ-1" value="&lt;font style=&quot;font-size: 24px;&quot;&gt;&lt;b&gt;NovaAI Privacy Details&lt;/b&gt;&lt;/font&gt;" style="text;html=1;strokeColor=#10739e;fillColor=#b1ddf0;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;" vertex="1" parent="1">
+          <mxGeometry x="240" y="40" width="380" height="70" as="geometry" />
+        </mxCell>
+        <mxCell id="SENzT0TBGtRkfwnPn_zZ-11" value="&lt;div style=&quot;&quot;&gt;&lt;ul&gt;&lt;li&gt;Feel free to use our API in countries with internet/political censorship or restrictions.&lt;/li&gt;&lt;li&gt;OpenAI never sees your IP address etc.&lt;/li&gt;&lt;li&gt;Third parties &lt;u&gt;can&#39;t&lt;/u&gt;&amp;nbsp;see your IP address, user agent, Discord user ID/name or other PPI received from our API; &lt;u&gt;you&#39;re technically anonymous as long as you don&#39;t share sensitive information&lt;/u&gt;&lt;/li&gt;&lt;/ul&gt;&lt;/div&gt;" style="whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;align=left;" vertex="1" parent="1">
+          <mxGeometry x="35" y="190" width="390" height="110" as="geometry" />
+        </mxCell>
+        <mxCell id="SENzT0TBGtRkfwnPn_zZ-12" value="&lt;ul&gt;&lt;li&gt;Don&#39;t share sensitive and personal information in API requests!&lt;/li&gt;&lt;li&gt;Third parties might be able to see the the request content you send (such as prompt/messages parameter and other configuration)&lt;/li&gt;&lt;/ul&gt;" style="whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;align=left;" vertex="1" parent="1">
+          <mxGeometry x="460" y="190" width="410" height="110" as="geometry" />
+        </mxCell>
+        <mxCell id="SENzT0TBGtRkfwnPn_zZ-13" value="&lt;span style=&quot;font-size: 24px;&quot;&gt;&lt;b&gt;PII we log&lt;/b&gt;&lt;/span&gt;" style="text;html=1;strokeColor=#b85450;fillColor=#f8cecc;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;" vertex="1" parent="1">
+          <mxGeometry x="325" y="490" width="210" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="SENzT0TBGtRkfwnPn_zZ-14" value="All of the info is subject to change! &lt;b&gt;Last update: 20th of August, 2023&lt;/b&gt;" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=4;spacingRight=4;overflow=hidden;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;rotatable=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="240" y="130" width="390" height="20" as="geometry" />
+        </mxCell>
+        <mxCell id="SENzT0TBGtRkfwnPn_zZ-16" value="&lt;b&gt;Account&lt;br&gt;&lt;/b&gt;API key&lt;br&gt;Discord user ID&lt;br&gt;Discord&amp;nbsp;" style="whiteSpace=wrap;html=1;align=center;fillColor=#fff2cc;strokeColor=#d6b656;" vertex="1" parent="1">
+          <mxGeometry x="445" y="580" width="160" height="120" as="geometry" />
+        </mxCell>
+        <mxCell id="SENzT0TBGtRkfwnPn_zZ-21" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" edge="1" parent="1" source="SENzT0TBGtRkfwnPn_zZ-17">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="440" y="640" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="SENzT0TBGtRkfwnPn_zZ-17" value="&lt;b&gt;For every API request:&lt;br&gt;&lt;/b&gt;Unix Timestamp&lt;br&gt;HTTP Method&lt;br&gt;URL path&lt;br&gt;&lt;u&gt;API User ID&lt;br&gt;&lt;/u&gt;IP address&lt;br&gt;User agent&lt;br&gt;AI model" style="whiteSpace=wrap;html=1;align=center;fillColor=#fff2cc;strokeColor=#d6b656;" vertex="1" parent="1">
+          <mxGeometry x="245" y="580" width="160" height="120" as="geometry" />
+        </mxCell>
+        <mxCell id="SENzT0TBGtRkfwnPn_zZ-18" value="&lt;span style=&quot;font-size: 24px;&quot;&gt;&lt;b&gt;PII we &lt;u&gt;don&#39;t&lt;/u&gt;&amp;nbsp;log&lt;/b&gt;&lt;/span&gt;" style="text;html=1;strokeColor=#36393d;fillColor=#cdeb8b;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;" vertex="1" parent="1">
+          <mxGeometry x="325" y="760" width="210" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="SENzT0TBGtRkfwnPn_zZ-19" value="Request content&lt;br&gt;Request response&lt;br&gt;Request headers other than:&lt;br&gt;&amp;nbsp;&lt;font face=&quot;Courier New&quot;&gt;x-forwarded-for&lt;/font&gt;/&lt;font face=&quot;Courier New&quot;&gt;cf-connecting-ip&lt;/font&gt;&lt;br&gt;..." style="whiteSpace=wrap;html=1;align=center;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="1">
+          <mxGeometry x="230" y="850" width="390" height="100" as="geometry" />
+        </mxCell>
+        <mxCell id="SENzT0TBGtRkfwnPn_zZ-22" value="&lt;div style=&quot;&quot;&gt;&lt;span style=&quot;background-color: initial;&quot;&gt;We only log data strictly necessary to prevent spam and abuse, and try to collect as little as possible.&lt;/span&gt;&lt;br&gt;&lt;/div&gt;&lt;div style=&quot;&quot;&gt;&lt;span style=&quot;background-color: initial;&quot;&gt;&lt;br&gt;&lt;/span&gt;&lt;/div&gt;&lt;div style=&quot;&quot;&gt;&lt;span style=&quot;background-color: initial;&quot;&gt;We will &lt;u&gt;never&lt;/u&gt;&amp;nbsp;sell your information to advertisers.&lt;/span&gt;&lt;/div&gt;&lt;div style=&quot;&quot;&gt;&lt;span style=&quot;background-color: initial;&quot;&gt;&lt;br&gt;&lt;/span&gt;&lt;/div&gt;&lt;div style=&quot;&quot;&gt;We &lt;u&gt;don&#39;t&lt;/u&gt;&amp;nbsp;give your prompts to AI model projects so that they can train their models without your consent.&lt;/div&gt;" style="whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;align=left;" vertex="1" parent="1">
+          <mxGeometry x="230" y="340" width="390" height="110" as="geometry" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>
