@@ -28,5 +28,5 @@ jobs:
     
     - name: Start API server & run tests!
       run: |
+        python checks
         python run
-    

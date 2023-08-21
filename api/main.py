@@ -24,21 +24,19 @@ app.include_router(core.router)
 
 @app.on_event('startup')
 async def startup_event():
-    # DATABASE FIX https://stackoverflow.com/questions/65970988/python-mongodb-motor-objectid-object-is-not-iterable-error-while-trying-to-f
-    import pydantic, bson
-    # pydantic.json.ENCODERS_BY_TYPE[bson.objectid.ObjectId]=str
+    """Runs when the API starts up."""
 
 @app.get('/')
 async def root():
     """
-    Returns the root endpoint.
+    Returns general information about the API.
     """
 
     return {
-        'status': 'ok',
-        'usage_docs': 'https://nova-oss.com',
-        'core_api_docs_for_developers': '/docs',
-        'github': 'https://github.com/novaoss/nova-api'
+        'hi': 'Welcome to the Nova API!',
+        'learn_more_here': 'https://nova-oss.com',
+        'github': 'https://github.com/novaoss/nova-api',
+        'core_api_docs_for_nova_developers': '/docs'
     }
 
 app.add_route('/{path:path}', transfer.handle, ['GET', 'POST', 'PUT', 'DELETE', 'PATCH'])

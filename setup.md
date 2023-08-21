@@ -100,7 +100,7 @@ python run 1337
 ```
 
 ## Test if it works
-`python tests`
+`python checks`
 
 ## Ports
 ```yml

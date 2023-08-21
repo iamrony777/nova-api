@@ -12,5 +12,8 @@ cp env/.prod.env /home/nova-prod/.env
 # Change directory
 cd /home/nova-prod
 
+# Kill the production server
+fuser -k 2333/tcp
+
 # Start screen
 screen -S nova-api python run prod

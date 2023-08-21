@@ -1,13 +1,23 @@
 """User management."""
 
 import os
+import sys
+
+project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
+sys.path.append(project_root)
+
+# the code above is to allow importing from the root folder
+
+import os
 import json
 import fastapi
 
-from db.users import UserManager
-
 from dhooks import Webhook, Embed
 from dotenv import load_dotenv
+
+import checks.client
+
+from db.users import UserManager
 
 load_dotenv()
 router = fastapi.APIRouter(tags=['core'])
@@ -21,11 +31,13 @@ async def check_core_auth(request):
     """
     received_auth = request.headers.get('Authorization')
 
-    if received_auth != os.getenv('CORE_API_KEY'):
+    if received_auth != os.environ['CORE_API_KEY']:
         return fastapi.Response(status_code=403, content='Invalid or no API key given.')
 
 @router.get('/users')
 async def get_users(discord_id: int, incoming_request: fastapi.Request):
+    """Returns a user by their discord ID. Requires a core API key."""
+
     auth = await check_core_auth(incoming_request)
     if auth:
         return auth
@@ -38,8 +50,10 @@ async def get_users(discord_id: int, incoming_request: fastapi.Request):
 
     return user
 
-async def new_user_webhook(user: dict) -> None:    
-    dhook = Webhook(os.getenv('DISCORD_WEBHOOK__USER_CREATED'))
+async def new_user_webhook(user: dict) -> None:
+    """Runs when a new user is created."""
+
+    dhook = Webhook(os.environ['DISCORD_WEBHOOK__USER_CREATED'])
 
     embed = Embed(
         description='New User',
@@ -54,6 +68,8 @@ async def new_user_webhook(user: dict) -> None:
 
 @router.post('/users')
 async def create_user(incoming_request: fastapi.Request):
+    """Creates a user. Requires a core API key."""
+
     auth_error = await check_core_auth(incoming_request)
 
     if auth_error:
@@ -64,7 +80,7 @@ async def create_user(incoming_request: fastapi.Request):
         discord_id = payload.get('discord_id')
     except (json.decoder.JSONDecodeError, AttributeError):
         return fastapi.Response(status_code=400, content='Invalid or no payload received.')
-    
+
     # Create the user 
     manager = UserManager()
     user = await manager.create(discord_id)
@@ -74,6 +90,8 @@ async def create_user(incoming_request: fastapi.Request):
 
 @router.put('/users')
 async def update_user(incoming_request: fastapi.Request):
+    """Updates a user. Requires a core API key."""
+
     auth_error = await check_core_auth(incoming_request)
 
     if auth_error:
@@ -85,9 +103,25 @@ async def update_user(incoming_request: fastapi.Request):
         updates = payload.get('updates')
     except (json.decoder.JSONDecodeError, AttributeError):
         return fastapi.Response(status_code=400, content='Invalid or no payload received.')
-    
+
     # Update the user 
     manager = UserManager()
     user = await manager.update_by_discord_id(discord_id, updates)
 
     return user
+
+@router.get('/checks')
+async def run_checks(incoming_request: fastapi.Request):
+    """Tests the API. Requires a core API key."""
+
+    auth_error = await check_core_auth(incoming_request)
+
+    if auth_error:
+        return auth_error
+
+    return {
+        'library': await checks.client.test_library(),
+        'library_moderation': await checks.client.test_library_moderation(),
+        'api_moderation': await checks.client.test_api_moderation(),
+        'models': await checks.client.test_models()
+    }

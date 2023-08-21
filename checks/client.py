@@ -1,9 +1,11 @@
 """Tests the API."""
 
 import os
-import openai as closedai
-import httpx
 import time
+import httpx
+import openai
+import asyncio
+import traceback
 
 from rich import print
 from typing import List
@@ -22,7 +24,7 @@ MESSAGES = [
 
 api_endpoint = 'http://localhost:2332'
 
-def test_server():
+async def test_server():
     """Tests if the API server is running."""
 
     try:
@@ -30,7 +32,7 @@ def test_server():
     except httpx.ConnectError as exc:
         raise ConnectionError(f'API is not running on port {api_endpoint}.') from exc
 
-def test_api(model: str=MODEL, messages: List[dict]=None) -> dict:
+async def test_api(model: str=MODEL, messages: List[dict]=None) -> dict:
     """Tests an API api_endpoint."""
 
     json_data = {
@@ -49,10 +51,10 @@ def test_api(model: str=MODEL, messages: List[dict]=None) -> dict:
 
     return response.text
 
-def test_library():
-    """Tests if the api_endpoint is working with the Python library."""
+async def test_library():
+    """Tests if the api_endpoint is working with the OpenAI Python library."""
 
-    completion = closedai.ChatCompletion.create(
+    completion = openai.ChatCompletion.create(
         model=MODEL,
         messages=MESSAGES
     )
@@ -61,13 +63,13 @@ def test_library():
 
     return completion['choices'][0]['message']['content']
 
-def test_library_moderation():
+async def test_library_moderation():
     try:
-        return closedai.Moderation.create('I wanna kill myself, I wanna kill myself; It\'s all I hear right now, it\'s all I hear right now')
-    except closedai.error.InvalidRequestError:
+        return openai.Moderation.create('I wanna kill myself, I wanna kill myself; It\'s all I hear right now, it\'s all I hear right now')
+    except openai.error.InvalidRequestError:
         return True
 
-def test_models():
+async def test_models():
     response = httpx.get(
         url=f'{api_endpoint}/models',
         headers=HEADERS,
@@ -76,7 +78,7 @@ def test_models():
     response.raise_for_status()
     return response.json()
 
-def test_api_moderation() -> dict:
+async def test_api_moderation() -> dict:
     """Tests an API api_endpoint."""
 
     response = httpx.get(
@@ -90,38 +92,43 @@ def test_api_moderation() -> dict:
 
 # ==========================================================================================
 
-def test_all():
+def demo():
     """Runs all tests."""
-    try:
-        print("Waiting until API Server is started up...")
-        time.sleep(6)
 
-        print('[lightblue]Running test on API server to check if its running...')
-        print(test_server())
+    try:
+        for _ in range(30):
+            if test_server():
+                break
+
+            print('Waiting until API Server is started up...')
+            time.sleep(1)
+        else:
+            raise ConnectionError('API Server is not running.')
 
         print('[lightblue]Running a api endpoint to see if requests can go through...')
-        print(test_api('gpt-3.5-trubo'))
+        print(asyncio.run(test_api('gpt-3.5-turbo')))
 
         print('[lightblue]Checking if the API works with the python library...')
-        print(test_library())
+        print(asyncio.run(test_library()))
 
         print('[lightblue]Checking if the moderation endpoint works...')
-        print(test_library_moderation())
+        print(asyncio.run(test_library_moderation()))
 
         print('[lightblue]Checking the /v1/models endpoint...')
-        print(test_models())
-    except Exception as e:
-        print('[red]Error: ')
-        print(e)
+        print(asyncio.run(test_models()))
+
+    except Exception as exc:
+        print('[red]Error: ' + str(exc))
+        traceback.print_exc()
         exit(500)
 
+openai.api_base = api_endpoint
+openai.api_key = os.environ['NOVA_KEY']
+
+HEADERS = {
+    'Content-Type': 'application/json',
+    'Authorization': 'Bearer ' + openai.api_key
+}
+
 if __name__ == '__main__':
-    closedai.api_base = api_endpoint
-    closedai.api_key = os.environ['NOVA_KEY']
-
-    HEADERS = {
-        'Content-Type': 'application/json',
-        'Authorization': 'Bearer ' + closedai.api_key
-    }
-
-    test_all()
+    demo()
