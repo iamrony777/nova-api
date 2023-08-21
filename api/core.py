@@ -10,6 +10,7 @@ sys.path.append(project_root)
 
 import os
 import json
+import hmac
 import fastapi
 
 from dhooks import Webhook, Embed
@@ -31,7 +32,10 @@ async def check_core_auth(request):
     """
     received_auth = request.headers.get('Authorization')
 
-    if received_auth != os.environ['CORE_API_KEY']:
+    correct_core_api = os.environ['CORE_API_KEY']
+
+    # use hmac.compare_digest to prevent timing attacks
+    if received_auth and hmac.compare_digest(received_auth, correct_core_api):
         return fastapi.Response(status_code=403, content='Invalid or no API key given.')
 
 @router.get('/users')

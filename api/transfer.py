@@ -44,12 +44,12 @@ async def handle(incoming_request):
     received_key = incoming_request.headers.get('Authorization')
 
     if not received_key or not received_key.startswith('Bearer '):
-        return await errors.error(401, 'No NovaAI API key given!', 'Add \'Authorization: Bearer nv-...\' to your request headers.')
+        return await errors.error(403, 'No NovaAI API key given!', 'Add \'Authorization: Bearer nv-...\' to your request headers.')
 
     user = await users.user_by_api_key(received_key.split('Bearer ')[1].strip())
 
     if not user or not user['status']['active']:
-        return await errors.error(401, 'Invalid or inactive NovaAI API key!', 'Create a new NovaOSS API key or reactivate your account.')
+        return await errors.error(403, 'Invalid or inactive NovaAI API key!', 'Create a new NovaOSS API key or reactivate your account.')
 
     ban_reason = user['status']['ban_reason']
     if ban_reason:
