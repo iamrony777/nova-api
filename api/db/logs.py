@@ -53,7 +53,7 @@ async def log_api_request(user: dict, incoming_request, target_url: str):
 
     model = payload.get('model')
     ip_address = await network.get_ip(incoming_request)
-    useragent = await replacer(incoming_request.headers.get('User-Agent'), UA_SIMPLIFY)
+    useragent = await replacer(incoming_request.headers.get('User-Agent', ''), UA_SIMPLIFY)
 
     new_log_item = {
         'timestamp': time.time(),

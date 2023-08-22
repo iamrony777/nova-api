@@ -14,7 +14,7 @@ from helpers import tokens, errors
 
 load_dotenv()
 
-models_list = json.load(open('models.json'))
+models_list = json.load(open('models.json', encoding='utf8'))
 
 with open('config/config.yml', encoding='utf8') as f:
     config = yaml.safe_load(f)
@@ -26,7 +26,7 @@ async def handle(incoming_request):
     Checks method, token amount, auth and cost along with if request is NSFW.
     """
     users = UserManager()
-    path = incoming_request.url.path.replace('v1/v1/', 'v1/')
+    path = incoming_request.url.path
 
     if '/models' in path:
         return fastapi.responses.JSONResponse(content=models_list)

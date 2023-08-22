@@ -116,7 +116,7 @@ async def stream(
                     cookies=target_request.get('cookies'),
                     ssl=False,
                     timeout=aiohttp.ClientTimeout(
-                        connect=3.0,
+                        connect=60,
                         total=float(os.getenv('TRANSFER_TIMEOUT', '120'))
                     ),
                 ) as response:

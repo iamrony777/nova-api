@@ -39,4 +39,4 @@ async def root():
         'core_api_docs_for_nova_developers': '/docs'
     }
 
-app.add_route('/{path:path}', transfer.handle, ['GET', 'POST', 'PUT', 'DELETE', 'PATCH'])
+app.add_route('/v1/{path:path}', transfer.handle, ['GET', 'POST', 'PUT', 'DELETE', 'PATCH'])
