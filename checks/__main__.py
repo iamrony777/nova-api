@@ -1,2 +1,4 @@
 import client
-client.demo()
+import asyncio
+
+asyncio.run(client.demo())

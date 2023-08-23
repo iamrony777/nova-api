@@ -26,7 +26,7 @@ async def handle(incoming_request):
     Checks method, token amount, auth and cost along with if request is NSFW.
     """
     users = UserManager()
-    path = incoming_request.url.path
+    path = incoming_request.url.path.replace('v1/v1', 'v1').replace('//', '/')
 
     if '/models' in path:
         return fastapi.responses.JSONResponse(content=models_list)
@@ -62,10 +62,11 @@ async def handle(incoming_request):
         cost = costs['chat-models'].get(payload.get('model'), cost)
 
     policy_violation = False
-    if 'chat/completions' in path or ('input' in payload or 'prompt' in payload):
-        inp = payload.get('input', payload.get('prompt', ''))
-        if inp and len(inp) > 2 and not inp.isnumeric():
-            policy_violation = await moderation.is_policy_violated(inp)
+    if '/moderations' not in path:
+        if '/chat/completions' in path or ('input' in payload or 'prompt' in payload):
+            inp = payload.get('input', payload.get('prompt', ''))
+            if inp and len(inp) > 2 and not inp.isnumeric():
+                policy_violation = await moderation.is_policy_violated(inp)
 
     if policy_violation:
         return await errors.error(400, f'The request contains content which violates this model\'s policies for "{policy_violation}".', 'We currently don\'t support any NSFW models.')

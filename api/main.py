@@ -36,7 +36,8 @@ async def root():
         'hi': 'Welcome to the Nova API!',
         'learn_more_here': 'https://nova-oss.com',
         'github': 'https://github.com/novaoss/nova-api',
-        'core_api_docs_for_nova_developers': '/docs'
+        'core_api_docs_for_nova_developers': '/docs',
+        'ping': 'pong'
     }
 
 app.add_route('/v1/{path:path}', transfer.handle, ['GET', 'POST', 'PUT', 'DELETE', 'PATCH'])

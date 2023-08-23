@@ -1,5 +1,6 @@
 """This module contains functions for checking if a message violates the moderation policy."""
 
+import time
 import asyncio
 import aiohttp
 
@@ -29,6 +30,8 @@ async def is_policy_violated(inp: Union[str, list]) -> bool:
         else:
             text = '\n'.join(inp)
 
+    print(f'[i] checking moderation for {text}')
+
     for _ in range(3):
         req = await load_balancing.balance_organic_request(
             {
@@ -36,9 +39,11 @@ async def is_policy_violated(inp: Union[str, list]) -> bool:
                 'payload': {'input': text}
             }
         )
+        print(f'[i] moderation request sent to {req["url"]}')
 
         async with aiohttp.ClientSession(connector=proxies.get_proxy().connector) as session:
             try:
+                start = time.perf_counter()
                 async with session.request(
                     method=req.get('method', 'POST'),
                     url=req['url'],
@@ -51,7 +56,11 @@ async def is_policy_violated(inp: Union[str, list]) -> bool:
                 ) as res:
                     res.raise_for_status()
                     json_response = await res.json()
+                    print(json_response)
+
                     categories = json_response['results'][0]['category_scores']
+
+                    print(f'[i] moderation check took {time.perf_counter() - start:.2f}s')
 
                     if json_response['results'][0]['flagged']:
                         return max(categories, key=categories.get)
@@ -59,6 +68,7 @@ async def is_policy_violated(inp: Union[str, list]) -> bool:
                     return False
 
             except Exception as exc:
+
                 if '401' in str(exc):
                     await provider_auth.invalidate_key(req.get('provider_auth'))
                 print('[!] moderation error:', type(exc), exc)

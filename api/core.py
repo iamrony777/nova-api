@@ -3,6 +3,8 @@
 import os
 import sys
 
+from helpers import errors
+
 project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
 sys.path.append(project_root)
 
@@ -24,19 +26,17 @@ load_dotenv()
 router = fastapi.APIRouter(tags=['core'])
 
 async def check_core_auth(request):
-    """
-    
-    ### Checks the request's auth
-    Auth is taken from environment variable `CORE_API_KEY`
-
+    """Checks the core API key. Returns nothing if it's valid, otherwise returns an error.
     """
     received_auth = request.headers.get('Authorization')
 
     correct_core_api = os.environ['CORE_API_KEY']
 
     # use hmac.compare_digest to prevent timing attacks
-    if received_auth and hmac.compare_digest(received_auth, correct_core_api):
-        return fastapi.Response(status_code=403, content='Invalid or no API key given.')
+    if not (received_auth and hmac.compare_digest(received_auth, correct_core_api)):
+        return await errors.error(401, 'The core API key you provided is invalid.', 'Check the `Authorization` header.')
+
+    return None
 
 @router.get('/users')
 async def get_users(discord_id: int, incoming_request: fastapi.Request):
@@ -50,7 +50,7 @@ async def get_users(discord_id: int, incoming_request: fastapi.Request):
     manager = UserManager()
     user = await manager.user_by_discord_id(discord_id)
     if not user:
-        return fastapi.Response(status_code=404, content='User not found.')
+        return await errors.error(404, 'Discord user not found in the API database.', 'Check the `discord_id` parameter.')
 
     return user
 
@@ -83,7 +83,7 @@ async def create_user(incoming_request: fastapi.Request):
         payload = await incoming_request.json()
         discord_id = payload.get('discord_id')
     except (json.decoder.JSONDecodeError, AttributeError):
-        return fastapi.Response(status_code=400, content='Invalid or no payload received.')
+        return await errors.error(400, 'Invalid or no payload received.', 'The payload must be a JSON object with a `discord_id` key.')
 
     # Create the user 
     manager = UserManager()
@@ -106,9 +106,12 @@ async def update_user(incoming_request: fastapi.Request):
         discord_id = payload.get('discord_id')
         updates = payload.get('updates')
     except (json.decoder.JSONDecodeError, AttributeError):
-        return fastapi.Response(status_code=400, content='Invalid or no payload received.')
+        return await errors.error(
+            400, 'Invalid or no payload received.',
+            'The payload must be a JSON object with a `discord_id` key and an `updates` key.'
+        )
 
-    # Update the user 
+    # Update the user
     manager = UserManager()
     user = await manager.update_by_discord_id(discord_id, updates)
 
@@ -123,9 +126,23 @@ async def run_checks(incoming_request: fastapi.Request):
     if auth_error:
         return auth_error
 
+    try:
+        chat = await checks.client.test_chat()
+    except Exception:
+        chat = None
+
+    try:
+        moderation = await checks.client.test_api_moderation()
+    except Exception:
+        moderation = None
+
+    try:
+        models = await checks.client.test_models()
+    except Exception:
+        models = None
+
     return {
-        'library': await checks.client.test_library(),
-        'library_moderation': await checks.client.test_library_moderation(),
-        'api_moderation': await checks.client.test_api_moderation(),
-        'models': await checks.client.test_models()
+        'chat/completions': chat,
+        'models': models,
+        'moderations': moderation,
     }

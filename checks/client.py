@@ -22,82 +22,103 @@ MESSAGES = [
     }
 ]
 
-api_endpoint = 'http://localhost:2332'
+api_endpoint = 'http://localhost:2332/v1'
 
 async def test_server():
     """Tests if the API server is running."""
 
     try:
-        return httpx.get(f'{api_endpoint.replace("/v1", "")}').json()['status'] == 'ok'
+        request_start = time.perf_counter()
+        async with httpx.AsyncClient() as client:
+            response = await client.get(
+                url=f'{api_endpoint.replace("/v1", "")}',
+                timeout=3
+            )
+            response.raise_for_status()
+
+        assert response.json()['ping'] == 'pong', 'The API did not return a correct response.'
     except httpx.ConnectError as exc:
         raise ConnectionError(f'API is not running on port {api_endpoint}.') from exc
 
-async def test_api(model: str=MODEL, messages: List[dict]=None) -> dict:
+    else:
+        return time.perf_counter() - request_start
+
+async def test_chat(model: str=MODEL, messages: List[dict]=None) -> dict:
     """Tests an API api_endpoint."""
 
     json_data = {
         'model': model,
         'messages': messages or MESSAGES,
-        'stream': True,
+        'stream': False
     }
 
-    response = httpx.post(
-        url=f'{api_endpoint}/chat/completions',
-        headers=HEADERS,
-        json=json_data,
-        timeout=20
-    )
-    response.raise_for_status()
+    request_start = time.perf_counter()
 
-    return response.text
+    async with httpx.AsyncClient() as client:
+        response = await client.post(
+            url=f'{api_endpoint}/chat/completions',
+            headers=HEADERS,
+            json=json_data,
+            timeout=10,
+        )
+        response.raise_for_status()
 
-async def test_library():
+    assert '2' in response.json()['choices'][0]['message']['content'], 'The API did not return a correct response.'
+    return time.perf_counter() - request_start
+
+async def test_library_chat():
     """Tests if the api_endpoint is working with the OpenAI Python library."""
 
+    request_start = time.perf_counter()
     completion = openai.ChatCompletion.create(
         model=MODEL,
         messages=MESSAGES
     )
 
-    print(completion)
-
-    return completion['choices'][0]['message']['content']
-
-async def test_library_moderation():
-    try:
-        return openai.Moderation.create('I wanna kill myself, I wanna kill myself; It\'s all I hear right now, it\'s all I hear right now')
-    except openai.error.InvalidRequestError:
-        return True
+    assert '2' in completion.choices[0]['message']['content'], 'The API did not return a correct response.'
+    return time.perf_counter() - request_start
 
 async def test_models():
-    response = httpx.get(
-        url=f'{api_endpoint}/models',
-        headers=HEADERS,
-        timeout=5
-    )
-    response.raise_for_status()
-    return response.json()
+    """Tests the models endpoint."""
+
+    request_start = time.perf_counter()
+    async with httpx.AsyncClient() as client:
+        response = await client.get(
+            url=f'{api_endpoint}/models',
+            headers=HEADERS,
+            timeout=3
+        )
+        response.raise_for_status()
+        res = response.json()
+
+    all_models = [model['id'] for model in res['data']]
+
+    assert 'gpt-3.5-turbo' in all_models, 'The model gpt-3.5-turbo is not present in the models endpoint.'
+    return time.perf_counter() - request_start
 
 async def test_api_moderation() -> dict:
-    """Tests an API api_endpoint."""
+    """Tests the moderation endpoint."""
 
-    response = httpx.get(
-        url=f'{api_endpoint}/moderations',
-        headers=HEADERS,
-        timeout=20
-    )
-    response.raise_for_status()
+    request_start = time.perf_counter()
+    async with httpx.AsyncClient() as client:
+        response = await client.post(
+            url=f'{api_endpoint}/moderations',
+            headers=HEADERS,
+            timeout=5,
+            json={'input': 'fuck you, die'}
+        )
 
-    return response.text
+    assert response.json()['results'][0]['flagged'] == True, 'Profanity not detected'
+    return time.perf_counter() - request_start
 
 # ==========================================================================================
 
-def demo():
+async def demo():
     """Runs all tests."""
 
     try:
         for _ in range(30):
-            if test_server():
+            if await test_server():
                 break
 
             print('Waiting until API Server is started up...')
@@ -105,17 +126,17 @@ def demo():
         else:
             raise ConnectionError('API Server is not running.')
 
-        print('[lightblue]Running a api endpoint to see if requests can go through...')
-        print(asyncio.run(test_api('gpt-3.5-turbo')))
+        print('[lightblue]Checking if the API works...')
+        print(await test_chat())
 
-        print('[lightblue]Checking if the API works with the python library...')
-        print(asyncio.run(test_library()))
+        print('[lightblue]Checking if the API works with the Python library...')
+        print(await test_library_chat())
 
         print('[lightblue]Checking if the moderation endpoint works...')
-        print(asyncio.run(test_library_moderation()))
+        print(await test_api_moderation())
 
-        print('[lightblue]Checking the /v1/models endpoint...')
-        print(asyncio.run(test_models()))
+        print('[lightblue]Checking the models endpoint...')
+        print(await test_models())
 
     except Exception as exc:
         print('[red]Error: ' + str(exc))
@@ -131,4 +152,4 @@ HEADERS = {
 }
 
 if __name__ == '__main__':
-    demo()
+    asyncio.run(demo())
