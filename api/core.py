@@ -128,7 +128,8 @@ async def run_checks(incoming_request: fastapi.Request):
 
     try:
         chat = await checks.client.test_chat()
-    except Exception:
+    except Exception as exc
+        print(exc)
         chat = None
 
     try:
