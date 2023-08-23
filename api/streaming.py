@@ -107,6 +107,21 @@ async def stream(
         # Here, we process the request
         async with aiohttp.ClientSession(connector=proxies.get_proxy().connector) as session:
             try:
+                async with session.get(
+                    url='https://checkip.amazonaws.com',
+                    timeout=aiohttp.ClientTimeout(
+                        connect=3,
+                        total=float(os.getenv('TRANSFER_TIMEOUT', '5'))
+                    )
+                ) as response:
+                    for actual_ip in os.getenv('ACTUAL_IPS', '').split(' '):
+                        if actual_ip in await response.text():
+                            raise ValueError(f'Proxy {response.text()} is transparent!')
+
+            except Exception as exc:
+                continue
+
+            try:
                 async with session.request(
                     method=target_request.get('method', 'POST'),
                     url=target_request['url'],
@@ -120,6 +135,9 @@ async def stream(
                         total=float(os.getenv('TRANSFER_TIMEOUT', '120'))
                     ),
                 ) as response:
+                    if response.status == 429:
+                        continue
+
                     if response.content_type == 'application/json':
                         data = await response.json()
 
@@ -144,13 +162,20 @@ async def stream(
                             model=model,
                             target_request=target_request
                         ):
+                            print(f'[STREAM] {chunk}')
                             yield chunk
 
                     break
 
             except ProxyError as exc:
-                print('[!] Proxy error:', exc)
+                print('[!] aiohttp came up with a dumb excuse to not work again ("pRoXy ErRor")')
                 continue
+
+            except ConnectionResetError as exc: 
+                print('[!] aiohttp came up with a dumb excuse to not work again ("cOnNeCtIoN rEsEt")')
+                continue
+
+    print(f'[STREAM] {json_response}')
 
     if is_chat and is_stream:
         yield await chat.create_chat_chunk(chat_id=chat_id, model=model, content=chat.CompletionStop)
