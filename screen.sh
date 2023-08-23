@@ -16,4 +16,4 @@ cd /home/nova-prod
 fuser -k 2333/tcp
 
 # Start screen
-screen -S nova-api python run prod
+screen -S nova-api python run prod && sleep 5
