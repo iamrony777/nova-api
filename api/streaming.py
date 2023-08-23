@@ -119,6 +119,7 @@ async def stream(
                             raise ValueError(f'Proxy {response.text()} is transparent!')
 
             except Exception as exc:
+                print(f'[!] proxy {proxies.get_proxy()} error - ({type(exc)} {exc})')
                 continue
 
             try:
@@ -162,7 +163,6 @@ async def stream(
                             model=model,
                             target_request=target_request
                         ):
-                            print(f'[STREAM] {chunk}')
                             yield chunk
 
                     break
@@ -174,8 +174,6 @@ async def stream(
             except ConnectionResetError as exc: 
                 print('[!] aiohttp came up with a dumb excuse to not work again ("cOnNeCtIoN rEsEt")')
                 continue
-
-    print(f'[STREAM] {json_response}')
 
     if is_chat and is_stream:
         yield await chat.create_chat_chunk(chat_id=chat_id, model=model, content=chat.CompletionStop)
