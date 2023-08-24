@@ -1,10 +1,13 @@
 """FastAPI setup."""
 
 import fastapi
+import pydantic
 
 from rich import print
 from dotenv import load_dotenv
+from bson.objectid import ObjectId
 from fastapi.middleware.cors import CORSMiddleware
+
 import core
 import transfer
 
@@ -25,6 +28,8 @@ app.include_router(core.router)
 @app.on_event('startup')
 async def startup_event():
     """Runs when the API starts up."""
+    # https://stackoverflow.com/a/74529009
+    pydantic.json.ENCODERS_BY_TYPE[ObjectId]=str
 
 @app.get('/')
 async def root():

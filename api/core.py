@@ -52,6 +52,8 @@ async def get_users(discord_id: int, incoming_request: fastapi.Request):
     if not user:
         return await errors.error(404, 'Discord user not found in the API database.', 'Check the `discord_id` parameter.')
 
+    print(type(user))
+    print(user)
     return user
 
 async def new_user_webhook(user: dict) -> None:
@@ -128,7 +130,7 @@ async def run_checks(incoming_request: fastapi.Request):
 
     try:
         chat = await checks.client.test_chat()
-    except Exception as exc
+    except Exception as exc:
         print(exc)
         chat = None
 

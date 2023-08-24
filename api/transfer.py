@@ -10,10 +10,11 @@ import streaming
 import moderation
 
 from db.users import UserManager
-from helpers import tokens, errors
+from helpers import tokens, errors, network
 
 load_dotenv()
 
+users = UserManager()
 models_list = json.load(open('models.json', encoding='utf8'))
 
 with open('config/config.yml', encoding='utf8') as f:
@@ -25,8 +26,10 @@ async def handle(incoming_request):
     Takes the request from the incoming request to the target endpoint.
     Checks method, token amount, auth and cost along with if request is NSFW.
     """
-    users = UserManager()
     path = incoming_request.url.path.replace('v1/v1', 'v1').replace('//', '/')
+
+    ip_address = await network.get_ip(incoming_request)
+    print(f'[{ip_address}] {path}')
 
     if '/models' in path:
         return fastapi.responses.JSONResponse(content=models_list)
@@ -69,7 +72,10 @@ async def handle(incoming_request):
                 policy_violation = await moderation.is_policy_violated(inp)
 
     if policy_violation:
-        return await errors.error(400, f'The request contains content which violates this model\'s policies for "{policy_violation}".', 'We currently don\'t support any NSFW models.')
+        return await errors.error(
+            400, f'The request contains content which violates this model\'s policies for "{policy_violation}".',
+            'We currently don\'t support any NSFW models.'
+        )
 
     role = user.get('role', 'default')
 

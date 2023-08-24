@@ -22,7 +22,7 @@ MESSAGES = [
     }
 ]
 
-api_endpoint = 'http://localhost:2332/v1'
+api_endpoint = os.getenv('CHECKS_ENDPOINT', 'http://localhost:2332/v1')
 
 async def test_server():
     """Tests if the API server is running."""

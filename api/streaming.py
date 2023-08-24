@@ -106,21 +106,21 @@ async def stream(
         # We haven't done any requests as of right now, everything until now was just preparation
         # Here, we process the request
         async with aiohttp.ClientSession(connector=proxies.get_proxy().connector) as session:
-            try:
-                async with session.get(
-                    url='https://checkip.amazonaws.com',
-                    timeout=aiohttp.ClientTimeout(
-                        connect=3,
-                        total=float(os.getenv('TRANSFER_TIMEOUT', '5'))
-                    )
-                ) as response:
-                    for actual_ip in os.getenv('ACTUAL_IPS', '').split(' '):
-                        if actual_ip in await response.text():
-                            raise ValueError(f'Proxy {response.text()} is transparent!')
+            # try:
+            #     async with session.get(
+            #         url='https://checkip.amazonaws.com',
+            #         timeout=aiohttp.ClientTimeout(
+            #             connect=0.4,
+            #             total=0.7
+            #         )
+            #     ) as response:
+            #         for actual_ip in os.getenv('ACTUAL_IPS', '').split(' '):
+            #             if actual_ip in await response.text():
+            #                 raise ValueError(f'Proxy {response.text()} is transparent!')
 
-            except Exception as exc:
-                print(f'[!] proxy {proxies.get_proxy()} error - ({type(exc)} {exc})')
-                continue
+            # except Exception as exc:
+            #     print(f'[!] proxy {proxies.get_proxy()} error - ({type(exc)} {exc})')
+            #     continue
 
             try:
                 async with session.request(
@@ -173,6 +173,10 @@ async def stream(
 
             except ConnectionResetError as exc: 
                 print('[!] aiohttp came up with a dumb excuse to not work again ("cOnNeCtIoN rEsEt")')
+                continue
+
+            except aiohttp.client_exceptions.ClientConnectionError:
+                print('[!] aiohttp came up with a dumb excuse to not work again ("cOnNeCtIoN cLosEd")')
                 continue
 
     if is_chat and is_stream:
