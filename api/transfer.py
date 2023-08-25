@@ -9,6 +9,7 @@ from dotenv import load_dotenv
 import streaming
 import moderation
 
+from rich import print
 from db.users import UserManager
 from helpers import tokens, errors, network
 
@@ -29,7 +30,7 @@ async def handle(incoming_request):
     path = incoming_request.url.path.replace('v1/v1', 'v1').replace('//', '/')
 
     ip_address = await network.get_ip(incoming_request)
-    print(f'[{ip_address}] {path}')
+    print(f'[bold green]>{ip_address}[/bold green]')
 
     if '/models' in path:
         return fastapi.responses.JSONResponse(content=models_list)
@@ -53,6 +54,9 @@ async def handle(incoming_request):
 
     if not user or not user['status']['active']:
         return await errors.error(403, 'Invalid or inactive NovaAI API key!', 'Create a new NovaOSS API key or reactivate your account.')
+
+    if user.get('auth', {}).get('discord'):
+        print(f'[bold green]>Discord[/bold green] {user["auth"]["discord"]}')
 
     ban_reason = user['status']['ban_reason']
     if ban_reason:

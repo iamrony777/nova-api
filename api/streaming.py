@@ -72,8 +72,12 @@ async def stream(
 
     json_response = {'error': 'No JSON response could be received'}
 
+    headers = {
+        'Content-Type': 'application/json',
+        'User-Agent': 'null'
+    }
+
     for _ in range(5):
-        headers = {'Content-Type': 'application/json'}
 
         # Load balancing: randomly selecting a suitable provider
         # If the request is a chat completion, then we need to load balance between chat providers
