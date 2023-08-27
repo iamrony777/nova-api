@@ -1,20 +1,23 @@
-import setuptools
+from fastapi import FastAPI
+from fastapi.responses import PlainTextResponse
+from fastapi.requests import Request
+from fastapi.responses import Response
+from slowapi import Limiter, _rate_limit_exceeded_handler
+from slowapi.util import get_remote_address
+from slowapi.errors import RateLimitExceeded
 
-with open('README.md', 'r', encoding='utf8') as fh:
-    long_description = fh.read()
+limiter = Limiter(key_func=lambda: "test", default_limits=["5/minute"])
+app = FastAPI()
+app.state.limiter = limiter
+app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 
-setuptools.setup(
-    name='nova-api',
-    version='0.0.1',
-    author='NovaOSS Contributors',
-    author_email='owner@nova-oss.com',
-    description='Nova API Server',
-    long_description=long_description,
-    long_description_content_type='text/markdown',
-    packages=setuptools.find_packages(),
-    classifiers=[
-        'Programming Language :: Python :: 3',
-        'License :: OSI Approved :: Apache Software License',
-        'Operating System :: OS Independent',
-    ]
-)
+# Note: the route decorator must be above the limit decorator, not below it
+@app.get("/home")
+@limiter.limit("5/minute")
+async def homepage(request: Request):
+    return PlainTextResponse("test")
+
+@app.get("/mars")
+@limiter.limit("5/minute")
+async def homepage(request: Request, response: Response):
+    return {"key": "value"}

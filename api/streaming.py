@@ -70,7 +70,7 @@ async def stream(
         yield await chat.create_chat_chunk(chat_id=chat_id, model=model, content=chat.CompletionStart)
         yield await chat.create_chat_chunk(chat_id=chat_id, model=model, content=None)
 
-    json_response = {'error': 'No JSON response could be received'}
+    json_response = {}
 
     headers = {
         'Content-Type': 'application/json',
@@ -110,22 +110,6 @@ async def stream(
         # We haven't done any requests as of right now, everything until now was just preparation
         # Here, we process the request
         async with aiohttp.ClientSession(connector=proxies.get_proxy().connector) as session:
-            # try:
-            #     async with session.get(
-            #         url='https://checkip.amazonaws.com',
-            #         timeout=aiohttp.ClientTimeout(
-            #             connect=0.4,
-            #             total=0.7
-            #         )
-            #     ) as response:
-            #         for actual_ip in os.getenv('ACTUAL_IPS', '').split(' '):
-            #             if actual_ip in await response.text():
-            #                 raise ValueError(f'Proxy {response.text()} is transparent!')
-
-            # except Exception as exc:
-            #     print(f'[!] proxy {proxies.get_proxy()} error - ({type(exc)} {exc})')
-            #     continue
-
             try:
                 async with session.request(
                     method=target_request.get('method', 'POST'),
@@ -172,15 +156,19 @@ async def stream(
                     break
 
             except ProxyError as exc:
-                print('[!] aiohttp came up with a dumb excuse to not work again ("pRoXy ErRor")')
+                print('[!] aiohttp ProxyError')
                 continue
 
             except ConnectionResetError as exc: 
-                print('[!] aiohttp came up with a dumb excuse to not work again ("cOnNeCtIoN rEsEt")')
+                print('[!] aiohttp ConnectionResetError')
                 continue
 
             except aiohttp.client_exceptions.ClientConnectionError:
-                print('[!] aiohttp came up with a dumb excuse to not work again ("cOnNeCtIoN cLosEd")')
+                print('[!] aiohttp ClientConnectionError')
+                continue
+
+            if not json_response and is_chat and is_stream:
+                print('[!] chat response is empty')
                 continue
 
     if is_chat and is_stream:

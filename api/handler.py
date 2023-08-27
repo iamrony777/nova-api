@@ -21,7 +21,7 @@ models_list = json.load(open('models.json', encoding='utf8'))
 with open('config/config.yml', encoding='utf8') as f:
     config = yaml.safe_load(f)
 
-async def handle(incoming_request):
+async def handle(incoming_request: fastapi.Request):
     """
     ### Transfer a streaming response 
     Takes the request from the incoming request to the target endpoint.

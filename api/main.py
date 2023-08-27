@@ -6,10 +6,15 @@ import pydantic
 from rich import print
 from dotenv import load_dotenv
 from bson.objectid import ObjectId
+from slowapi.errors import RateLimitExceeded
+from slowapi.middleware import SlowAPIMiddleware
 from fastapi.middleware.cors import CORSMiddleware
+from slowapi import Limiter, _rate_limit_exceeded_handler
+
+from helpers import network
 
 import core
-import transfer
+import handler
 
 load_dotenv()
 
@@ -24,6 +29,17 @@ app.add_middleware(
 )
 
 app.include_router(core.router)
+
+limiter = Limiter(
+    swallow_errors=True,
+    key_func=network.get_ip_sync, default_limits=[
+    '2/second',
+    '20/minute',
+    '300/hour'
+])
+app.state.limiter = limiter
+app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
+app.add_middleware(SlowAPIMiddleware)
 
 @app.on_event('startup')
 async def startup_event():
@@ -45,4 +61,6 @@ async def root():
         'ping': 'pong'
     }
 
-app.add_route('/v1/{path:path}', transfer.handle, ['GET', 'POST', 'PUT', 'DELETE', 'PATCH'])
+@app.route('/v1/{path:path}', methods=['GET', 'POST', 'PUT', 'DELETE', 'PATCH'])
+async def v1_handler(request: fastapi.Request):
+    return await handler.handle(request)
