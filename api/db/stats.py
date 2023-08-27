@@ -61,6 +61,8 @@ class StatsManager:
         db = await self._get_collection('stats')
         return await db.find_one({obj_filter})
 
+manager = StatsManager()
+
 if __name__ == '__main__':
     stats = StatsManager()
     asyncio.run(stats.add_date())

@@ -101,6 +101,8 @@ class UserManager:
         db = await self._get_collection('users')
         await db.delete_one({'_id': user_id})
 
+manager = UserManager()
+
 async def demo():
     user = await UserManager().create(69420)
     print(user)

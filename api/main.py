@@ -63,4 +63,5 @@ async def root():
 
 @app.route('/v1/{path:path}', methods=['GET', 'POST', 'PUT', 'DELETE', 'PATCH'])
 async def v1_handler(request: fastapi.Request):
-    return await handler.handle(request)
+    res = await handler.handle(request)
+    return res

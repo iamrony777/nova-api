@@ -30,8 +30,6 @@ async def is_policy_violated(inp: Union[str, list]) -> bool:
         else:
             text = '\n'.join(inp)
 
-    print(f'[i] checking moderation for {text}')
-
     for _ in range(3):
         req = await load_balancing.balance_organic_request(
             {
@@ -39,7 +37,6 @@ async def is_policy_violated(inp: Union[str, list]) -> bool:
                 'payload': {'input': text}
             }
         )
-        print(f'[i] moderation request sent to {req["url"]}')
 
         async with aiohttp.ClientSession(connector=proxies.get_proxy().connector) as session:
             try:
@@ -52,15 +49,12 @@ async def is_policy_violated(inp: Union[str, list]) -> bool:
                     headers=req.get('headers'),
                     cookies=req.get('cookies'),
                     ssl=False,
-                    timeout=aiohttp.ClientTimeout(total=2),
+                    timeout=aiohttp.ClientTimeout(total=3),
                 ) as res:
                     res.raise_for_status()
                     json_response = await res.json()
-                    print(json_response)
 
                     categories = json_response['results'][0]['category_scores']
-
-                    print(f'[i] moderation check took {time.perf_counter() - start:.2f}s')
 
                     if json_response['results'][0]['flagged']:
                         return max(categories, key=categories.get)

@@ -10,16 +10,13 @@ import starlette
 
 from rich import print
 from dotenv import load_dotenv
-from python_socks._errors import ProxyError
 
 import chunks
 import proxies
 import provider_auth
+import after_request
 import load_balancing
 
-from db import logs
-from db.users import UserManager
-from db.stats import StatsManager
 from helpers import network, chat, errors
 
 load_dotenv()
@@ -54,12 +51,10 @@ async def stream(
     If not streaming, it sends the result in its entirety.
     """
 
-    ## Setup managers
-    db = UserManager()
-    stats = StatsManager()
-
     is_chat = False
     is_stream = payload.get('stream', False)
+
+    model = None
 
     if 'chat/completions' in path:
         is_chat = True
@@ -78,7 +73,6 @@ async def stream(
     }
 
     for _ in range(5):
-
         # Load balancing: randomly selecting a suitable provider
         # If the request is a chat completion, then we need to load balance between chat providers
         # If the request is an organic request, then we need to load balance between organic providers
@@ -120,17 +114,19 @@ async def stream(
                     cookies=target_request.get('cookies'),
                     ssl=False,
                     timeout=aiohttp.ClientTimeout(
-                        connect=60,
+                        connect=2,
                         total=float(os.getenv('TRANSFER_TIMEOUT', '120'))
                     ),
                 ) as response:
+
                     if response.status == 429:
                         continue
 
                     if response.content_type == 'application/json':
                         data = await response.json()
 
-                        if data.get('code') == 'invalid_api_key':
+                        if 'invalid_api_key' in str(data) or 'account_deactivated' in str(data):
+                            print('[!] invalid api key', target_request.get('provider_auth'))
                             await provider_auth.invalidate_key(target_request.get('provider_auth'))
                             continue
 
@@ -155,19 +151,11 @@ async def stream(
 
                     break
 
-            except ProxyError as exc:
-                print('[!] aiohttp ProxyError')
+            except Exception as exc:
+                print(f'[!] {type(exc)} - {exc}')
                 continue
 
-            except ConnectionResetError as exc: 
-                print('[!] aiohttp ConnectionResetError')
-                continue
-
-            except aiohttp.client_exceptions.ClientConnectionError:
-                print('[!] aiohttp ClientConnectionError')
-                continue
-
-            if not json_response and is_chat and is_stream:
+            if (not json_response) and is_chat:
                 print('[!] chat response is empty')
                 continue
 
@@ -178,20 +166,16 @@ async def stream(
     if not is_stream and json_response:
         yield json.dumps(json_response)
 
-    if user and incoming_request:
-        await logs.log_api_request(user=user, incoming_request=incoming_request, target_url=target_request['url'])
-
-    if credits_cost and user:
-        await db.update_by_id(user['_id'], {'$inc': {'credits': -credits_cost}})
-
-    ip_address = await network.get_ip(incoming_request)
-    await stats.add_date()
-    await stats.add_ip_address(ip_address)
-    await stats.add_path(path)
-    await stats.add_target(target_request['url'])
-    if is_chat:
-        await stats.add_model(model)
-        await stats.add_tokens(input_tokens, model)
+    await after_request.after_request(
+        incoming_request=incoming_request,
+        target_request=target_request,
+        user=user,
+        credits_cost=credits_cost,
+        input_tokens=input_tokens,
+        path=path,
+        is_chat=is_chat,
+        model=model,
+    )
 
 if __name__ == '__main__':
     asyncio.run(stream())

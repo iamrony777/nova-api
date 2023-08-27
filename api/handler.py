@@ -40,11 +40,6 @@ async def handle(incoming_request: fastapi.Request):
     except json.decoder.JSONDecodeError:
         payload = {}
 
-    try:
-        input_tokens = await tokens.count_for_messages(payload.get('messages', []))
-    except (KeyError, TypeError):
-        input_tokens = 0
-
     received_key = incoming_request.headers.get('Authorization')
 
     if not received_key or not received_key.startswith('Bearer '):
@@ -70,10 +65,16 @@ async def handle(incoming_request: fastapi.Request):
 
     policy_violation = False
     if '/moderations' not in path:
-        if '/chat/completions' in path or ('input' in payload or 'prompt' in payload):
+        inp = ''
+
+        if 'input' in payload or 'prompt' in payload:
             inp = payload.get('input', payload.get('prompt', ''))
-            if inp and len(inp) > 2 and not inp.isnumeric():
-                policy_violation = await moderation.is_policy_violated(inp)
+
+        if isinstance(payload.get('messages'), list):
+            inp = '\n'.join([message['content'] for message in payload['messages']])
+
+        if inp and len(inp) > 2 and not inp.isnumeric():
+            policy_violation = await moderation.is_policy_violated(inp)
 
     if policy_violation:
         return await errors.error(
@@ -104,7 +105,7 @@ async def handle(incoming_request: fastapi.Request):
             path=path,
             payload=payload,
             credits_cost=cost,
-            input_tokens=input_tokens,
+            input_tokens=-1,
             incoming_request=incoming_request,
         ),
         media_type=media_type

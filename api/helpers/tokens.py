@@ -1,3 +1,5 @@
+import time
+import asyncio
 import tiktoken
 
 async def count_for_messages(messages: list, model: str='gpt-3.5-turbo-0613') -> int:
@@ -57,3 +59,15 @@ for information on how messages are converted to tokens.""")
     num_tokens += 3  # every reply is primed with <|start|>assistant<|message|>
 
     return num_tokens
+
+if __name__ == '__main__':
+    start = time.perf_counter()
+
+    messages = [
+        {
+            'role': 'user',
+            'content': '1+1='
+        }
+    ]
+    print(asyncio.run(count_for_messages(messages)))
+    print(f'Took {(time.perf_counter() - start) * 1000}ms')
