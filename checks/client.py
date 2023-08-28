@@ -66,16 +66,27 @@ async def test_chat(model: str=MODEL, messages: List[dict]=None) -> dict:
     assert '2' in response.json()['choices'][0]['message']['content'], 'The API did not return a correct response.'
     return time.perf_counter() - request_start
 
-async def test_library_chat():
-    """Tests if the api_endpoint is working with the OpenAI Python library."""
+async def test_sdxl():
+    """Tests the image generation endpoint with the SDXL model."""
+
+    json_data = {
+        'prompt': 'a nice sunset with a samurai standing in the middle',
+        'n': 1,
+        'size': '1024x1024'
+    }
 
     request_start = time.perf_counter()
-    completion = openai.ChatCompletion.create(
-        model=MODEL,
-        messages=MESSAGES
-    )
 
-    assert '2' in completion.choices[0]['message']['content'], 'The API did not return a correct response.'
+    async with httpx.AsyncClient() as client:
+        response = await client.post(
+            url=f'{api_endpoint}/images/generations',
+            headers=HEADERS,
+            json=json_data,
+            timeout=10,
+        )
+        response.raise_for_status()
+
+    assert '://' in response.json()['data'][0]['url']
     return time.perf_counter() - request_start
 
 async def test_models():
@@ -129,8 +140,8 @@ async def demo():
         print('[lightblue]Checking if the API works...')
         print(await test_chat())
 
-        print('[lightblue]Checking if the API works with the Python library...')
-        print(await test_library_chat())
+        print('[lightblue]Checking if SDXL image generation works...')
+        print(await test_sdxl())
 
         print('[lightblue]Checking if the moderation endpoint works...')
         print(await test_api_moderation())
