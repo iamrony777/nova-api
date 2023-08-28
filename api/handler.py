@@ -2,6 +2,8 @@
 
 import json
 import yaml
+import time
+import orjson
 import fastapi
 
 from dotenv import load_dotenv
@@ -45,6 +47,10 @@ async def handle(incoming_request: fastapi.Request):
     if not received_key or not received_key.startswith('Bearer '):
         return await errors.error(403, 'No NovaAI API key given!', 'Add \'Authorization: Bearer nv-...\' to your request headers.')
 
+    if '#' in received_key:
+        key_tags = received_key.split('#')[1]
+        received_key = received_key.split('#')[0]
+
     user = await users.user_by_api_key(received_key.split('Bearer ')[1].strip())
 
     if not user or not user['status']['active']:
@@ -62,6 +68,42 @@ async def handle(incoming_request: fastapi.Request):
 
     if 'chat/completions' in path:
         cost = costs['chat-models'].get(payload.get('model'), cost)
+
+    role = user.get('role', 'default')
+
+    try:
+        role_cost_multiplier = config['roles'][role]['bonus']
+    except KeyError:
+        role_cost_multiplier = 1
+
+    cost = round(cost * role_cost_multiplier)
+
+    if user['credits'] < cost:
+        return await errors.error(429, 'Not enough credits.', 'Wait or earn more credits. Learn more on our website or Discord server.')
+
+    payload_with_vars = json.dumps(payload)
+
+    replace_dict = {
+        'timestamp': str(int(time.time())),
+        'date': time.strftime('%Y-%m-%d'),
+        'time': time.strftime('%H:%M:%S'),
+        'datetime': time.strftime('%Y-%m-%d %H:%M:%S'),
+        'model': payload.get('model', 'unknown'),
+    }
+
+    if 'ALLOW_INSECURE_VARS' in key_tags:
+        replace_dict.update({
+            'my.ip': ip_address,
+            'my.id': str(user['_id']),
+            'my.role': user.get('role', 'default'),
+            'my.credits': str(user['credits']),
+            'my.discord': user.get('auth', {}).get('discord', ''),
+        })
+
+    for key, value in replace_dict.items():
+        payload_with_vars = payload_with_vars.replace(f'[[{key}]]', value)
+
+    payload = json.loads(payload_with_vars)
 
     policy_violation = False
     if '/moderations' not in path:
@@ -81,18 +123,6 @@ async def handle(incoming_request: fastapi.Request):
             400, f'The request contains content which violates this model\'s policies for "{policy_violation}".',
             'We currently don\'t support any NSFW models.'
         )
-
-    role = user.get('role', 'default')
-
-    try:
-        role_cost_multiplier = config['roles'][role]['bonus']
-    except KeyError:
-        role_cost_multiplier = 1
-
-    cost = round(cost * role_cost_multiplier)
-
-    if user['credits'] < cost:
-        return await errors.error(429, 'Not enough credits.', 'Wait or earn more credits. Learn more on our website or Discord server.')
 
     if 'chat/completions' in path and not payload.get('stream', False):
         payload['stream'] = False
