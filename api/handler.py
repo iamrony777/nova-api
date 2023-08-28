@@ -47,6 +47,8 @@ async def handle(incoming_request: fastapi.Request):
     if not received_key or not received_key.startswith('Bearer '):
         return await errors.error(403, 'No NovaAI API key given!', 'Add \'Authorization: Bearer nv-...\' to your request headers.')
 
+    key_tags = ''
+
     if '#' in received_key:
         key_tags = received_key.split('#')[1]
         received_key = received_key.split('#')[0]
