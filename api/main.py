@@ -32,7 +32,7 @@ app.include_router(core.router)
 
 limiter = Limiter(
     swallow_errors=True,
-    key_func=network.get_ip_sync, default_limits=[
+    key_func=network.get_ratelimit_key, default_limits=[
     '2/second',
     '20/minute',
     '300/hour'

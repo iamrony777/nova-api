@@ -1,4 +1,9 @@
-import asyncio
+import os
+import time
+
+from dotenv import load_dotenv
+
+load_dotenv()
 
 async def get_ip(request) -> str:
     """Get the IP address of the incoming request."""
@@ -17,7 +22,7 @@ async def get_ip(request) -> str:
 
     return detected_ip
 
-def get_ip_sync(request) -> str:
+def get_ratelimit_key(request) -> str:
     """Get the IP address of the incoming request."""
 
     xff = None
@@ -31,5 +36,10 @@ def get_ip_sync(request) -> str:
     ]
 
     detected_ip = next((i for i in possible_ips if i), None)
+
+    for whitelisted_ip in os.getenv('NO_RATELIMIT_IPS', '').split():
+        if whitelisted_ip in detected_ip:
+            custom_key = f'whitelisted-{time.time()}'
+            return custom_key
 
     return detected_ip

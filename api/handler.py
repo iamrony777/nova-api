@@ -41,6 +41,8 @@ async def handle(incoming_request: fastapi.Request):
         payload = await incoming_request.json()
     except json.decoder.JSONDecodeError:
         payload = {}
+    except UnicodeDecodeError:
+        payload = {}
 
     received_key = incoming_request.headers.get('Authorization')
 
@@ -83,29 +85,31 @@ async def handle(incoming_request: fastapi.Request):
     if user['credits'] < cost:
         return await errors.error(429, 'Not enough credits.', 'Wait or earn more credits. Learn more on our website or Discord server.')
 
-    payload_with_vars = json.dumps(payload)
 
-    replace_dict = {
-        'timestamp': str(int(time.time())),
-        'date': time.strftime('%Y-%m-%d'),
-        'time': time.strftime('%H:%M:%S'),
-        'datetime': time.strftime('%Y-%m-%d %H:%M:%S'),
-        'model': payload.get('model', 'unknown'),
-    }
+    if not 'DISABLE_VARS' in key_tags:
+        payload_with_vars = json.dumps(payload)
 
-    if 'ALLOW_INSECURE_VARS' in key_tags:
-        replace_dict.update({
-            'my.ip': ip_address,
-            'my.id': str(user['_id']),
-            'my.role': user.get('role', 'default'),
-            'my.credits': str(user['credits']),
-            'my.discord': user.get('auth', {}).get('discord', ''),
-        })
+        replace_dict = {
+            'timestamp': str(int(time.time())),
+            'date': time.strftime('%Y-%m-%d'),
+            'time': time.strftime('%H:%M:%S'),
+            'datetime': time.strftime('%Y-%m-%d %H:%M:%S'),
+            'model': payload.get('model', 'unknown'),
+        }
 
-    for key, value in replace_dict.items():
-        payload_with_vars = payload_with_vars.replace(f'[[{key}]]', value)
+        if 'ALLOW_INSECURE_VARS' in key_tags:
+            replace_dict.update({
+                'my.ip': ip_address,
+                'my.id': str(user['_id']),
+                'my.role': user.get('role', 'default'),
+                'my.credits': str(user['credits']),
+                'my.discord': user.get('auth', {}).get('discord', ''),
+            })
 
-    payload = json.loads(payload_with_vars)
+        for key, value in replace_dict.items():
+            payload_with_vars = payload_with_vars.replace(f'[[{key}]]', value)
+
+        payload = json.loads(payload_with_vars)
 
     policy_violation = False
     if '/moderations' not in path:
