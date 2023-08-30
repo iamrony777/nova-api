@@ -23,6 +23,17 @@ or
 pip install .
 ```
 
+***
+
+Profanity checking requires:
+
+```
+pip install alt-profanity-check
+# doesn't work? try
+pip install git+https://github.com/dimitrismistriotis/alt-profanity-check.git
+```
+
+
 ## `.env` configuration
 Create a `.env` file, make sure not to reveal any of its contents to anyone, and fill in the required values in the format `KEY=VALUE`. Otherwise, the code won't run.
 

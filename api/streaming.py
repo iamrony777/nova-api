@@ -177,5 +177,7 @@ async def stream(
         model=model,
     )
 
+    print(f'[+] {path} -> {model or "")
+
 if __name__ == '__main__':
     asyncio.run(stream())
