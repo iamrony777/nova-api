@@ -27,11 +27,11 @@ async def balance_chat_request(payload: dict) -> dict:
         providers_available.append(provider_module)
 
     if not providers_available:
-        raise NotImplementedError(f'The model "{payload["model"]}" is not available. MODEl_UNAVAILABLE')
+        raise ValueError(f'The model "{payload["model"]}" is not available. MODEL_UNAVAILABLE')
 
     provider = random.choice(providers_available)
-    target = provider.chat_completion(**payload)
-    
+    target = await provider.chat_completion(**payload)
+
     module_name = await _get_module_name(provider)
     target['module'] = module_name
 
@@ -61,7 +61,7 @@ async def balance_organic_request(request: dict) -> dict:
         providers_available.append(provider_module)
 
     provider = random.choice(providers_available)
-    target = provider.organify(request)
+    target = await provider.organify(request)
 
     module_name = await _get_module_name(provider)
     target['module'] = module_name

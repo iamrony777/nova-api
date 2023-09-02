@@ -140,8 +140,8 @@ async def demo():
         print('[lightblue]Checking if the API works...')
         print(await test_chat())
 
-        print('[lightblue]Checking if SDXL image generation works...')
-        print(await test_sdxl())
+        # print('[lightblue]Checking if SDXL image generation works...')
+        # print(await test_sdxl())
 
         print('[lightblue]Checking if the moderation endpoint works...')
         print(await test_api_moderation())

@@ -3,14 +3,11 @@
 import os
 import sys
 
-from helpers import errors
-
 project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
 sys.path.append(project_root)
 
 # the code above is to allow importing from the root folder
 
-import os
 import json
 import hmac
 import fastapi
@@ -20,6 +17,7 @@ from dotenv import load_dotenv
 
 import checks.client
 
+from helpers import errors
 from db.users import UserManager
 
 load_dotenv()
@@ -64,11 +62,13 @@ async def new_user_webhook(user: dict) -> None:
         color=0x90ee90,
     )
 
+    dc = user['auth']['discord']
+
     embed.add_field(name='ID', value=str(user['_id']), inline=False)
-    embed.add_field(name='Discord', value=user['auth']['discord'] or '-')
+    embed.add_field(name='Discord', value=dc or '-')
     embed.add_field(name='Github', value=user['auth']['github'] or '-')
 
-    dhook.send(embed=embed)
+    dhook.send(content=f'<@{dc}>', embed=embed)
 
 @router.post('/users')
 async def create_user(incoming_request: fastapi.Request):

@@ -1,6 +1,27 @@
 """This module contains functions for authenticating with providers."""
 
+import os
 import asyncio
+
+from dotenv import load_dotenv
+from dhooks import Webhook, Embed
+
+load_dotenv()
+
+async def invalidation_webhook(provider_and_key: str) -> None:
+    """Runs when a new user is created."""
+
+    dhook = Webhook(os.environ['DISCORD_WEBHOOK__API_ISSUE'])
+
+    embed = Embed(
+        description='Key Invalidated',
+        color=0xffee90,
+    )
+
+    embed.add_field(name='Provider', value=provider_and_key.split('>')[0])
+    embed.add_field(name='Key (censored)', value=f'||{provider_and_key.split(">")[1][:10]}...||', inline=False)
+
+    dhook.send(embed=embed)
 
 async def invalidate_key(provider_and_key: str) -> None:
     """
@@ -28,5 +49,7 @@ async def invalidate_key(provider_and_key: str) -> None:
     with open(f'secret/{provider}.invalid.txt', 'a', encoding='utf8') as f:
         f.write(key + '\n')
 
+    await invalidation_webhook(provider_and_key)
+
 if __name__ == '__main__':
-    asyncio.run(invalidate_key('closed>cd...'))
+    asyncio.run(invalidate_key('closed>demo-...'))

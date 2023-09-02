@@ -1,5 +1,6 @@
 """Does quite a few checks and prepares the incoming request for the target endpoint, so it can be streamed"""
 
+import os
 import json
 import yaml
 import time
@@ -22,6 +23,8 @@ models_list = json.load(open('models.json', encoding='utf8'))
 
 with open('config/config.yml', encoding='utf8') as f:
     config = yaml.safe_load(f)
+
+moderation_debug_key_key = os.getenv('MODERATION_DEBUG_KEY')
 
 async def handle(incoming_request: fastapi.Request):
     """
@@ -47,7 +50,7 @@ async def handle(incoming_request: fastapi.Request):
     received_key = incoming_request.headers.get('Authorization')
 
     if not received_key or not received_key.startswith('Bearer '):
-        return await errors.error(403, 'No NovaAI API key given!', 'Add \'Authorization: Bearer nv-...\' to your request headers.')
+        return await errors.error(401, 'No NovaAI API key given!', 'Add \'Authorization: Bearer nv-...\' to your request headers.')
 
     key_tags = ''
 
@@ -58,7 +61,7 @@ async def handle(incoming_request: fastapi.Request):
     user = await users.user_by_api_key(received_key.split('Bearer ')[1].strip())
 
     if not user or not user['status']['active']:
-        return await errors.error(403, 'Invalid or inactive NovaAI API key!', 'Create a new NovaOSS API key or reactivate your account.')
+        return await errors.error(418, 'Invalid or inactive NovaAI API key!', 'Create a new NovaOSS API key or reactivate your account.')
 
     if user.get('auth', {}).get('discord'):
         print(f'[bold green]>Discord[/bold green] {user["auth"]["discord"]}')
@@ -86,7 +89,7 @@ async def handle(incoming_request: fastapi.Request):
         return await errors.error(429, 'Not enough credits.', 'Wait or earn more credits. Learn more on our website or Discord server.')
 
 
-    if not 'DISABLE_VARS' in key_tags:
+    if 'DISABLE_VARS' not in key_tags:
         payload_with_vars = json.dumps(payload)
 
         replace_dict = {
@@ -112,26 +115,30 @@ async def handle(incoming_request: fastapi.Request):
         payload = json.loads(payload_with_vars)
 
     policy_violation = False
-    if '/moderations' not in path:
-        inp = ''
 
-        if 'input' in payload or 'prompt' in payload:
-            inp = payload.get('input', payload.get('prompt', ''))
+    if not (moderation_debug_key_key and moderation_debug_key_key in key_tags and 'gpt-3' in payload.get('model', '')):
+        if '/moderations' not in path:
+            inp = ''
 
-        if isinstance(payload.get('messages'), list):
-            inp = '\n'.join([message['content'] for message in payload['messages']])
+            if 'input' in payload or 'prompt' in payload:
+                inp = payload.get('input', payload.get('prompt', ''))
 
-        if inp and len(inp) > 2 and not inp.isnumeric():
-            policy_violation = await moderation.is_policy_violated(inp)
+            if isinstance(payload.get('messages'), list):
+                inp = '\n'.join([message['content'] for message in payload['messages']])
+
+            if inp and len(inp) > 2 and not inp.isnumeric():
+                policy_violation = await moderation.is_policy_violated(inp)
 
     if policy_violation:
         return await errors.error(
-            400, f'The request contains content which violates this model\'s policies for "{policy_violation}".',
+            400, f'The request contains content which violates this model\'s policies for <{policy_violation}>.',
             'We currently don\'t support any NSFW models.'
         )
 
     if 'chat/completions' in path and not payload.get('stream', False):
         payload['stream'] = False
+    if 'chat/completions' in path and not payload.get('model'):
+        payload['model'] = 'gpt-3.5-turbo'
 
     media_type = 'text/event-stream' if payload.get('stream', False) else 'application/json'
 

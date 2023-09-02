@@ -8,23 +8,21 @@ costs:
   chat-models:
     gpt-4-32k: 100
     gpt-4: 30
-    gpt-3: 10
+    gpt-3: 5
 
 ## Roles Explanation
 
 # Bonuses: They are a multiplier for costs
 #          They work like: final_cost = cost * bonus
-# Rate limits: Limit the requests of the user
-#          Seconds to wait between requests
 
 roles:
   owner:
-    bonus: 0.1
+    bonus: 0
   admin:
-    bonus: 0.3
+    bonus: 0.2
   helper:
     bonus: 0.4
   booster:
-    bonus: 0.5
+    bonus: 0.6
   default:
     bonus: 1.0

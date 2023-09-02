@@ -1,3 +1,13 @@
+# Setup
+## Requirements
+- Python 3.9+
+- pip
+- MongoDB database
+
+## Recommended
+- `git` (for updates)
+- `screen` (for production)
+- Cloudflare (for security, anti-DDoS, etc.) - we fully support Cloudflare
 
 ## Install
 Assuming you have a new version of Python 3.9+ and pip installed:
@@ -109,6 +119,8 @@ You can also specify a port, e.g.:
 ```bash
 python run 1337
 ```
+
+## Adding a provider
 
 ## Test if it works
 `python checks`
