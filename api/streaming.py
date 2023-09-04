@@ -91,9 +91,10 @@ async def stream(
                     'cookies': incoming_request.cookies
                 })
         except ValueError as exc:
-            webhook = dhooks.Webhook(os.environ['DISCORD_WEBHOOK__API_ISSUE'])
-            webhook.send(content=f'API Issue: **`{exc}`**\nhttps://i.imgflip.com/7uv122.jpg')
-            yield await errors.yield_error(500, 'Sorry, the API has no working keys anymore.', 'The admins have been messaged automatically.')
+            if model in ['gpt-3.5-turbo', 'gpt-4', 'gpt-4-32k']:
+                webhook = dhooks.Webhook(os.environ['DISCORD_WEBHOOK__API_ISSUE'])
+                webhook.send(content=f'API Issue: **`{exc}`**\nhttps://i.imgflip.com/7uv122.jpg')
+                yield await errors.yield_error(500, 'Sorry, the API has no working keys anymore.', 'The admins have been messaged automatically.')
             return
 
         target_request['headers'].update(target_request.get('headers', {}))
