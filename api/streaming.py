@@ -126,6 +126,9 @@ async def stream(
                     if response.content_type == 'application/json':
                         data = await response.json()
 
+                        if 'method_not_supported' in str(data):
+                            await errors.error(500, 'Sorry, this endpoint does not support this method.', data['error']['message'])
+
                         if 'invalid_api_key' in str(data) or 'account_deactivated' in str(data):
                             print('[!] invalid api key', target_request.get('provider_auth'))
                             await provider_auth.invalidate_key(target_request.get('provider_auth'))
@@ -153,18 +156,21 @@ async def stream(
                     break
 
             except Exception as exc:
-                print(f'[!] {type(exc)} - {exc}')
+                # print(f'[!] {type(exc)} - {exc}')
                 continue
 
             if (not json_response) and is_chat:
                 print('[!] chat response is empty')
                 continue
+    else:
+        yield await errors.yield_error(500, 'Sorry, the API is not responding.', 'Please try again later.')
+        return
 
     if is_chat and is_stream:
         yield await chat.create_chat_chunk(chat_id=chat_id, model=model, content=chat.CompletionStop)
         yield 'data: [DONE]\n\n'
 
-    if not is_stream and json_response:
+    if (not is_stream) and json_response:
         yield json.dumps(json_response)
 
     await after_request.after_request(
