@@ -116,7 +116,7 @@ async def stream(
                     ssl=False,
                     timeout=aiohttp.ClientTimeout(
                         connect=0.5,
-                        total=float(os.getenv('TRANSFER_TIMEOUT', '120'))
+                        total=float(os.getenv('TRANSFER_TIMEOUT', '500'))
                     ),
                 ) as response:
 

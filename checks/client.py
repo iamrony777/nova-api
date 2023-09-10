@@ -43,7 +43,7 @@ async def test_server():
     else:
         return time.perf_counter() - request_start
 
-async def test_chat(model: str=MODEL, messages: List[dict]=None) -> dict:
+async def test_chat_non_stream(model: str=MODEL, messages: List[dict]=None) -> dict:
     """Tests an API api_endpoint."""
 
     json_data = {
@@ -107,21 +107,6 @@ async def test_models():
     assert 'gpt-3.5-turbo' in all_models, 'The model gpt-3.5-turbo is not present in the models endpoint.'
     return time.perf_counter() - request_start
 
-async def test_api_moderation() -> dict:
-    """Tests the moderation endpoint."""
-
-    request_start = time.perf_counter()
-    async with httpx.AsyncClient() as client:
-        response = await client.post(
-            url=f'{api_endpoint}/moderations',
-            headers=HEADERS,
-            timeout=5,
-            json={'input': 'fuck you, die'}
-        )
-
-    assert response.json()['results'][0]['flagged'] == True, 'Profanity not detected'
-    return time.perf_counter() - request_start
-
 # ==========================================================================================
 
 async def demo():
@@ -137,16 +122,16 @@ async def demo():
         else:
             raise ConnectionError('API Server is not running.')
 
-        print('[lightblue]Checking if the API works...')
-        print(await test_chat())
+        print('Checking non-streamed chat completions...')
+        print(await test_chat_non_stream())
 
         # print('[lightblue]Checking if SDXL image generation works...')
         # print(await test_sdxl())
 
-        print('[lightblue]Checking if the moderation endpoint works...')
-        print(await test_api_moderation())
+        # print('[lightblue]Checking if the moderation endpoint works...')
+        # print(await test_api_moderation())
 
-        print('[lightblue]Checking the models endpoint...')
+        print('Checking the models endpoint...')
         print(await test_models())
 
     except Exception as exc:

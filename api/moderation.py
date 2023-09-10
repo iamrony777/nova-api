@@ -1,11 +1,13 @@
 """This module contains functions for checking if a message violates the moderation policy."""
 
 import time
+import difflib
 import asyncio
 import aiocache
 import profanity_check
 
 from typing import Union
+from Levenshtein import distance
 
 cache = aiocache.Cache(aiocache.SimpleMemoryCache)
 
@@ -41,15 +43,13 @@ async def is_policy_violated(inp: Union[str, list]) -> bool:
 async def is_policy_violated__own_model(inp: Union[str, list]) -> bool:
     """Checks if the input violates the moderation policy using our own model."""
 
-    inp = input_to_text(inp)
+    inp = input_to_text(inp).lower()
 
     if profanity_check.predict([inp])[0]:
-        return 'NovaAI\'s selfhosted moderation model detected unsuitable content.'
+        return 'Sorry, our moderation AI has detected NSFW content in your message.'
 
     return False
 
 if __name__ == '__main__':
-    for i in range(10):
-        start = time.perf_counter()
-        print(asyncio.run(is_policy_violated('kill ms')))
-        print((time.perf_counter() - start) * 1000)
+    while True:
+        print(asyncio.run(is_policy_violated(input('-> '))))
