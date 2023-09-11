@@ -9,7 +9,7 @@ import fastapi
 
 from dotenv import load_dotenv
 
-import streaming
+import responder
 import moderation
 
 from rich import print
@@ -143,7 +143,7 @@ async def handle(incoming_request: fastapi.Request):
     media_type = 'text/event-stream' if payload.get('stream', False) else 'application/json'
 
     return fastapi.responses.StreamingResponse(
-        content=streaming.stream(
+        content=responder.respond(
             user=user,
             path=path,
             payload=payload,

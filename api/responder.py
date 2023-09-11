@@ -39,7 +39,7 @@ DEMO_PAYLOAD = {
     ]
 }
 
-async def stream(
+async def respond(
     path: str='/v1/chat/completions',
     user: dict=None,
     payload: dict=None,
@@ -185,6 +185,3 @@ async def stream(
     )
 
     print(f'[+] {path} -> {model or ""}')
-
-if __name__ == '__main__':
-    asyncio.run(stream())
