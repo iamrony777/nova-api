@@ -20,8 +20,6 @@ We aim to fix that! NovaAI provides several AI models for you to use for free.
 
 
 ###### *I founded FoxGPT (called *NovaGPT* back then)
-Old, slow, deprecated* FoxGPT vs new NovaAI repository star count:
-
 <a href="https://star-history.com/#NovaOSS/nova-api&FoxGPT/gpt&Date">
   <picture>
     <source media="(prefers-color-scheme: dark)" srcset="https://api.star-history.com/svg?repos=NovaOSS/nova-api,FoxGPT/gpt&type=Date&theme=dark" />
@@ -29,8 +27,6 @@ Old, slow, deprecated* FoxGPT vs new NovaAI repository star count:
     <img alt="Star History Chart" src="https://api.star-history.com/svg?repos=NovaOSS/nova-api,FoxGPT/gpt&type=Date" />
   </picture>
 </a>
-
-<img alt="'Emotional damage' meme, with a man with a worried face and the yellow caption 'emotional damage'" src="https://external-content.duckduckgo.com/iu/?u=https%3A%2F%2Findianmemetemplates.com%2Fwp-content%2Fuploads%2Femotional-damage-1024x575.jpg&f=1&nofb=1&ipt=b325721ee0a7b9e11603a9bd484c8042b82e1704e639887107c6ce3e0d9b389e&ipo=images" height=100>
 
 ## NovaOSS APIs
 Our infrastructure might seem a bit confusing, but it's actually quite simple. Just the first one really matters for you, if you want to access our AI API. The other ones are just for the team.

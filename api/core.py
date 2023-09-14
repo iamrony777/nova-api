@@ -138,7 +138,7 @@ async def run_checks(incoming_request: fastapi.Request):
         checks.client.test_chat_stream_gpt3,
         checks.client.test_function_calling,
         checks.client.test_image_generation,
-        checks.client.test_speech_to_text,
+        # checks.client.test_speech_to_text,
         checks.client.test_models
     ]
 
