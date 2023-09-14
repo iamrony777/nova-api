@@ -5,7 +5,9 @@ import pydantic
 
 from rich import print
 from dotenv import load_dotenv
+
 from bson.objectid import ObjectId
+
 from slowapi.errors import RateLimitExceeded
 from slowapi.middleware import SlowAPIMiddleware
 from fastapi.middleware.cors import CORSMiddleware

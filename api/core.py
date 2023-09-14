@@ -50,6 +50,9 @@ async def get_users(discord_id: int, incoming_request: fastapi.Request):
     if not user:
         return await errors.error(404, 'Discord user not found in the API database.', 'Check the `discord_id` parameter.')
 
+    # turn the ObjectId into a string
+    user['_id'] = str(user['_id'])
+
     return user
 
 async def new_user_webhook(user: dict) -> None:
@@ -89,6 +92,8 @@ async def create_user(incoming_request: fastapi.Request):
     manager = UserManager()
     user = await manager.create(discord_id)
     await new_user_webhook(user)
+
+    user['_id'] = str(user['_id'])
 
     return user
 
