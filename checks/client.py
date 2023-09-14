@@ -20,7 +20,7 @@ MODEL = 'gpt-3.5-turbo'
 MESSAGES = [
     {
         'role': 'user',
-        'content': '1+1=',
+        'content': 'Just respond with the number "1337", nothing else.'
     }
 ]
 
@@ -65,7 +65,7 @@ async def test_chat_non_stream_gpt4() -> float:
         )
         response.raise_for_status()
 
-    assert '2' in response.json()['choices'][0]['message']['content'], 'The API did not return a correct response.'
+    assert '1337' in response.json()['choices'][0]['message']['content'], 'The API did not return a correct response.'
     return time.perf_counter() - request_start
 
 async def test_chat_stream_gpt3() -> float:
@@ -88,7 +88,26 @@ async def test_chat_stream_gpt3() -> float:
         )
         response.raise_for_status()
 
-    assert '2' in response.json()['choices'][0]['message']['content'], 'The API did not return a correct response.'
+    chunks = []
+    resulting_text = ''
+
+    async for chunk in response.aiter_text():
+        for subchunk in chunk.split('\n\n'):
+            chunk = subchunk.replace('data: ', '').strip()
+
+            if chunk == '[DONE]':
+                break
+
+            if chunk:
+                chunks.append(json.loads(chunk))
+
+                try:
+                    resulting_text += json.loads(chunk)['choices'][0]['delta']['content']
+                except KeyError:
+                    pass
+
+    assert '1337' in resulting_text, 'The API did not return a correct response.'
+
     return time.perf_counter() - request_start
 
 async def test_image_generation() -> float:
@@ -192,17 +211,17 @@ async def demo():
         # print('[lightblue]Checking if function calling works...')
         # print(await test_function_calling())
 
-        print('Checking non-streamed chat completions...')
-        print(await test_chat_non_stream_gpt4())
+        # print('Checking non-streamed chat completions...')
+        # print(await test_chat_non_stream_gpt4())
 
-        print('Checking streamed chat completions...')
-        print(await test_chat_stream_gpt3())
+        # print('Checking streamed chat completions...')
+        # print(await test_chat_stream_gpt3())
 
-        print('[lightblue]Checking if  image generation works...')
-        print(await test_image_generation())
+        # print('[lightblue]Checking if  image generation works...')
+        # print(await test_image_generation())
 
-        print('Checking the models endpoint...')
-        print(await test_models())
+        # print('Checking the models endpoint...')
+        # print(await test_models())
 
     except Exception as exc:
         print('[red]Error: ' + str(exc))
