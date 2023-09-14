@@ -124,7 +124,14 @@ async def handle(incoming_request: fastapi.Request):
                 inp = payload.get('input', payload.get('prompt', ''))
 
             if isinstance(payload.get('messages'), list):
-                inp = '\n'.join([message['content'] for message in payload['messages']])
+                inp = ''
+
+                for message in payload.get('messages', []):
+                    if message.get('role') == 'user':
+                        inp += message.get('content', '') + '\n'
+
+            if 'functions' in payload:
+                inp += '\n'.join([function.get('description', '') for function in payload.get('functions', [])])
 
             if inp and len(inp) > 2 and not inp.isnumeric():
                 policy_violation = await moderation.is_policy_violated(inp)
@@ -148,7 +155,7 @@ async def handle(incoming_request: fastapi.Request):
             path=path,
             payload=payload,
             credits_cost=cost,
-            input_tokens=-1,
+            input_tokens=0,
             incoming_request=incoming_request,
         ),
         media_type=media_type

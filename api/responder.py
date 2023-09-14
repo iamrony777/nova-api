@@ -11,7 +11,6 @@ import starlette
 from rich import print
 from dotenv import load_dotenv
 
-import chunks
 import proxies
 import provider_auth
 import after_request
@@ -20,24 +19,6 @@ import load_balancing
 from helpers import network, chat, errors
 
 load_dotenv()
-
-## Loads config which contains rate limits
-with open('config/config.yml', encoding='utf8') as f:
-    config = yaml.safe_load(f)
-
-## Where all rate limit requested data will be stored.
-# Rate limit data is **not persistent** (It will be deleted on server stop/restart).
-user_last_request_time = {}
-
-DEMO_PAYLOAD = {
-    'model': 'gpt-3.5-turbo',
-    'messages': [
-        {
-            'role': 'user',
-            'content': '1+1='
-        }
-    ]
-}
 
 async def respond(
     path: str='/v1/chat/completions',
@@ -52,27 +33,22 @@ async def respond(
     """
 
     is_chat = False
-    is_stream = payload.get('stream', False)
 
     model = None
+    is_stream = False
 
     if 'chat/completions' in path:
         is_chat = True
         model = payload['model']
 
-    if is_chat and is_stream:
-        chat_id = await chat.create_chat_id()
-        yield await chat.create_chat_chunk(chat_id=chat_id, model=model, content=chat.CompletionStart)
-        yield await chat.create_chat_chunk(chat_id=chat_id, model=model, content=None)
-
     json_response = {}
 
     headers = {
         'Content-Type': 'application/json',
-        'User-Agent': 'null'
+        'User-Agent': 'axios/0.21.1',
     }
 
-    for _ in range(5):
+    for _ in range(10):
         # Load balancing: randomly selecting a suitable provider
         # If the request is a chat completion, then we need to load balance between chat providers
         # If the request is an organic request, then we need to load balance between organic providers
@@ -115,10 +91,11 @@ async def respond(
                     cookies=target_request.get('cookies'),
                     ssl=False,
                     timeout=aiohttp.ClientTimeout(
-                        connect=0.5,
+                        connect=0.3,
                         total=float(os.getenv('TRANSFER_TIMEOUT', '500'))
                     ),
                 ) as response:
+                    is_stream = response.content_type == 'text/event-stream'
 
                     if response.status == 429:
                         continue
@@ -144,34 +121,26 @@ async def respond(
                             if 'Too Many Requests' in str(exc):
                                 continue
 
-                        async for chunk in chunks.process_chunks(
-                            chunks=response.content.iter_any(),
-                            is_chat=is_chat,
-                            chat_id=chat_id,
-                            model=model,
-                            target_request=target_request
-                        ):
-                            yield chunk
+                        async for chunk in response.content.iter_any():
+                            chunk = chunk.decode('utf8').strip()
+                            yield chunk + '\n\n'
 
                     break
 
             except Exception as exc:
-                # print(f'[!] {type(exc)} - {exc}')
                 continue
 
             if (not json_response) and is_chat:
                 print('[!] chat response is empty')
                 continue
     else:
-        yield await errors.yield_error(500, 'Sorry, the API is not responding.', 'Please try again later.')
+        yield await errors.yield_error(500, 'Sorry, the provider is not responding. We\'re possibly getting rate-limited.', 'Please try again later.')
         return
-
-    if is_chat and is_stream:
-        yield await chat.create_chat_chunk(chat_id=chat_id, model=model, content=chat.CompletionStop)
-        yield 'data: [DONE]\n\n'
 
     if (not is_stream) and json_response:
         yield json.dumps(json_response)
+
+    print(f'[+] {path} -> {model or ""}')
 
     await after_request.after_request(
         incoming_request=incoming_request,
@@ -183,5 +152,3 @@ async def respond(
         is_chat=is_chat,
         model=model,
     )
-
-    print(f'[+] {path} -> {model or ""}')

@@ -2,11 +2,9 @@
 
 import fastapi
 import pydantic
-import functools
 
 from rich import print
 from dotenv import load_dotenv
-from json import JSONDecodeError
 from bson.objectid import ObjectId
 from slowapi.errors import RateLimitExceeded
 from slowapi.middleware import SlowAPIMiddleware
@@ -17,7 +15,6 @@ from helpers import network
 
 import core
 import handler
-import moderation
 
 load_dotenv()
 
@@ -66,17 +63,5 @@ async def root():
 
 @app.route('/v1/{path:path}', methods=['GET', 'POST', 'PUT', 'DELETE', 'PATCH'])
 async def v1_handler(request: fastapi.Request):
-    res = await handler.handle(request)
+    res = await handler.handle(incoming_request=request)
     return res
-
-@functools.lru_cache()
-@app.post('/moderate')
-async def moderate(request: fastapi.Request):
-    try:
-        prompt = await request.json()
-        prompt = prompt['text']
-    except (KeyError, JSONDecodeError):
-        return fastapi.Response(status_code=400)
-
-    result = await moderation.is_policy_violated__own_model(prompt)
-    return result or ''

@@ -126,24 +126,23 @@ async def run_checks(incoming_request: fastapi.Request):
     if auth_error:
         return auth_error
 
-    try:
-        chat = await checks.client.test_chat()
-    except Exception as exc:
-        print(exc)
-        chat = None
+    results = {}
 
-    try:
-        moderation = await checks.client.test_api_moderation()
-    except Exception:
-        moderation = None
+    funcs = [
+        checks.client.test_chat_non_stream_gpt4,
+        checks.client.test_chat_stream_gpt3,
+        checks.client.test_function_calling,
+        checks.client.test_image_generation,
+        checks.client.test_speech_to_text,
+        checks.client.test_models
+    ]
 
-    try:
-        models = await checks.client.test_models()
-    except Exception:
-        models = None
+    for func in funcs:
+        try:
+            result = await func()
+        except Exception as exc:
+            results[func.__name__] = str(exc)
+        else:
+            results[func.__name__] = result
 
-    return {
-        'chat/completions': chat,
-        'models': models,
-        'moderations': moderation,
-    }
+    return results
