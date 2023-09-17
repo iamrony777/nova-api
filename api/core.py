@@ -36,25 +36,6 @@ async def check_core_auth(request):
 
     return None
 
-@router.get('/users')
-async def get_users(discord_id: int, incoming_request: fastapi.Request):
-    """Returns a user by their discord ID. Requires a core API key."""
-
-    auth = await check_core_auth(incoming_request)
-    if auth:
-        return auth
-
-    # Get user by discord ID
-    manager = UserManager()
-    user = await manager.user_by_discord_id(discord_id)
-    if not user:
-        return await errors.error(404, 'Discord user not found in the API database.', 'Check the `discord_id` parameter.')
-
-    # turn the ObjectId into a string
-    user['_id'] = str(user['_id'])
-
-    return user
-
 async def new_user_webhook(user: dict) -> None:
     """Runs when a new user is created."""
 
@@ -72,6 +53,25 @@ async def new_user_webhook(user: dict) -> None:
     embed.add_field(name='Github', value=user['auth']['github'] or '-')
 
     dhook.send(content=f'<@{dc}>', embed=embed)
+
+
+@router.get('/users')
+async def get_users(discord_id: int, incoming_request: fastapi.Request):
+    """Returns a user by their discord ID. Requires a core API key."""
+
+    auth = await check_core_auth(incoming_request)
+    if auth: return auth
+
+    # Get user by discord ID
+    manager = UserManager()
+    user = await manager.user_by_discord_id(discord_id)
+    if not user:
+        return await errors.error(404, 'Discord user not found in the API database.', 'Check the `discord_id` parameter.')
+
+    # turn the ObjectId into a string
+    user['_id'] = str(user['_id'])
+
+    return user
 
 @router.post('/users')
 async def create_user(incoming_request: fastapi.Request):
@@ -102,9 +102,7 @@ async def update_user(incoming_request: fastapi.Request):
     """Updates a user. Requires a core API key."""
 
     auth_error = await check_core_auth(incoming_request)
-
-    if auth_error:
-        return auth_error
+    if auth_error: return auth_error
 
     try:
         payload = await incoming_request.json()
@@ -127,9 +125,7 @@ async def run_checks(incoming_request: fastapi.Request):
     """Tests the API. Requires a core API key."""
 
     auth_error = await check_core_auth(incoming_request)
-
-    if auth_error:
-        return auth_error
+    if auth_error: return auth_error
 
     results = {}
 
