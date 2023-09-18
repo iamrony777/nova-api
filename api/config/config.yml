@@ -3,12 +3,12 @@ max-credits-owner: 694201337
 start-credits: 1000
 
 costs:
-  other: 10
+  other: 5
 
   chat-models:
     gpt-4-32k: 100
     gpt-4: 30
-    gpt-3: 5
+    gpt-3: 3
 
 ## Roles Explanation
 
