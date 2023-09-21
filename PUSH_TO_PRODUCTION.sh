@@ -3,6 +3,9 @@
 # Commit to the production branch
 # git commit -am "Auto-trigger - Production server started" && git push origin Production
 
+# backup database
+/usr/local/bin/python /home/nova-api/backup_manager/main.py pre_prodpush
+
 # Kill production server
 fuser -k 2333/tcp
 

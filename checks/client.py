@@ -208,20 +208,20 @@ async def demo():
         else:
             raise ConnectionError('API Server is not running.')
 
-        # print('[lightblue]Checking if function calling works...')
-        # print(await test_function_calling())
+        print('[lightblue]Checking if function calling works...')
+        print(await test_function_calling())
 
-        # print('Checking non-streamed chat completions...')
-        # print(await test_chat_non_stream_gpt4())
+        print('Checking non-streamed chat completions...')
+        print(await test_chat_non_stream_gpt4())
 
-        # print('Checking streamed chat completions...')
-        # print(await test_chat_stream_gpt3())
+        print('Checking streamed chat completions...')
+        print(await test_chat_stream_gpt3())
 
-        # print('[lightblue]Checking if  image generation works...')
-        # print(await test_image_generation())
+        print('[lightblue]Checking if  image generation works...')
+        print(await test_image_generation())
 
-        # print('Checking the models endpoint...')
-        # print(await test_models())
+        print('Checking the models endpoint...')
+        print(await test_models())
 
     except Exception as exc:
         print('[red]Error: ' + str(exc))
