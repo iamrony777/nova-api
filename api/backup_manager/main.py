@@ -1,21 +1,22 @@
-from dotenv import load_dotenv
 import os
-from motor.motor_asyncio import AsyncIOMotorClient
-from bson import json_util
 import json
-from sys import argv
 import asyncio
+
+from sys import argv
+from bson import json_util
+from dotenv import load_dotenv
+from motor.motor_asyncio import AsyncIOMotorClient
 
 load_dotenv()
 
-MONGO_URI = os.getenv("MONGO_URI")
+MONGO_URI = os.environ['MONGO_URI']
 FILE_DIR = os.path.dirname(os.path.realpath(__file__))
 
-async def main(output_dir):
+async def main(output_dir: str):
     await make_backup(output_dir)
 
-async def make_backup(output_dir):
-    output_dir = os.path.join(FILE_DIR, "..", "backups", output_dir)
+async def make_backup(output_dir: str):
+    output_dir = os.path.join(FILE_DIR, '..', 'backups', output_dir)
 
     if not os.path.exists(output_dir):
         os.makedirs(output_dir)
@@ -25,26 +26,29 @@ async def make_backup(output_dir):
     databases = {db: await client[db].list_collection_names() for db in databases}
 
     for database in databases:
-        if not os.path.exists(f"{output_dir}/{database}"):
-            os.mkdir(f"{output_dir}/{database}")
+        if database == 'local':
+            continue
+
+        if not os.path.exists(f'{output_dir}/{database}'):
+            os.mkdir(f'{output_dir}/{database}')
 
         for collection in databases[database]:
-            print(f"Making backup for {database}/{collection}")
+            print(f'Making backup for {database}/{collection}')
             await make_backup_for_collection(database, collection, output_dir)
 
 async def make_backup_for_collection(database, collection, output_dir):
-    path = f"{output_dir}/{database}/{collection}.json"
+    path = f'{output_dir}/{database}/{collection}.json'
 
     client = AsyncIOMotorClient(MONGO_URI)
     collection = client[database][collection]
     documents = await collection.find({}).to_list(length=None)
 
-    with open(path, "w") as f:
+    with open(path, 'w') as f:
         json.dump(documents, f, default=json_util.default)
 
-if __name__ == "__main__":
+if __name__ == '__main__':
     if len(argv) < 2 or len(argv) > 2:
-        print("Usage: python3 main.py <output_dir>")
+        print('Usage: python3 main.py <output_dir>')
         exit(1)
 
     output_dir = argv[1]

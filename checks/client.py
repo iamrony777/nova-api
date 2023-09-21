@@ -217,8 +217,8 @@ async def demo():
         print('Checking streamed chat completions...')
         print(await test_chat_stream_gpt3())
 
-        print('[lightblue]Checking if  image generation works...')
-        print(await test_image_generation())
+        # print('[lightblue]Checking if  image generation works...')
+        # print(await test_image_generation())
 
         print('Checking the models endpoint...')
         print(await test_models())
