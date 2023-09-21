@@ -19,7 +19,7 @@ from helpers import tokens, errors, network
 load_dotenv()
 
 users = UserManager()
-models_list = json.load(open('models.json', encoding='utf8'))
+models_list = json.load(open('cache/models.json', encoding='utf8'))
 models = [model['id'] for model in models_list['data']]
 
 with open('config/config.yml', encoding='utf8') as f:
