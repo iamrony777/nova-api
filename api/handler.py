@@ -20,6 +20,7 @@ load_dotenv()
 
 users = UserManager()
 models_list = json.load(open('models.json', encoding='utf8'))
+models = [model['id'] for model in models_list['data']]
 
 with open('config/config.yml', encoding='utf8') as f:
     config = yaml.safe_load(f)
@@ -148,6 +149,9 @@ async def handle(incoming_request: fastapi.Request):
         payload['model'] = 'gpt-3.5-turbo'
 
     media_type = 'text/event-stream' if payload.get('stream', False) else 'application/json'
+
+    if payload['model'] not in models:
+        return await errors.error(404, 'Model not found.', 'Check the model name and try again.')
 
     return fastapi.responses.StreamingResponse(
         content=responder.respond(
