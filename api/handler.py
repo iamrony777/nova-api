@@ -71,6 +71,9 @@ async def handle(incoming_request: fastapi.Request):
     if ban_reason:
         return await errors.error(403, f'Your NovaAI account has been banned. Reason: \'{ban_reason}\'.', 'Contact the staff for an appeal.')
 
+    if 'account/credits' in path:
+        return fastapi.responses.JSONResponse({'credits': user['credits']})
+
     costs = config['costs']
     cost = costs['other']
 
@@ -150,7 +153,7 @@ async def handle(incoming_request: fastapi.Request):
 
     media_type = 'text/event-stream' if payload.get('stream', False) else 'application/json'
 
-    if payload['model'] not in models:
+    if (model := payload.get('model')) not in models and model is not None:
         return await errors.error(404, 'Model not found.', 'Check the model name and try again.')
 
     return fastapi.responses.StreamingResponse(
