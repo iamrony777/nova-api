@@ -13,6 +13,9 @@ rich = "*"
 tiktoken = "*"
 uvicorn = {extras = ["standard"], version = "*"}
 slowapi = "*"
+orjson = "*"
+aiocache = "*"
+profanity-check = "*"
 
 [dev-packages]
 
