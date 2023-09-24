@@ -884,16 +884,21 @@ files = [
 [[package]]
 name = "profanity-check"
 version = "1.0.3"
-description = "A fast, robust library to check for offensive language in strings."
+description = ""
 optional = false
 python-versions = "*"
-files = [
-    {file = "profanity-check-1.0.3.tar.gz", hash = "sha256:b32dd3444a1fccc8527aa29330970e447b9f67659454127a15e85078ce77eb21"},
-    {file = "profanity_check-1.0.3-py3-none-any.whl", hash = "sha256:553fbe8bc0aee14dcebf93a751e4e54e5d14f58c12a364d63b9146a75c5e4e78"},
-]
+files = []
+develop = false
 
 [package.dependencies]
+joblib = ">=0.14.1"
 scikit-learn = ">=0.20.2"
+
+[package.source]
+type = "git"
+url = "https://github.com/vzhou842/profanity-check.git"
+reference = "HEAD"
+resolved_reference = "c835dc0f8ef28c7691688ecb774fd3149c1f097b"
 
 [[package]]
 name = "pydantic"
@@ -1777,4 +1782,4 @@ multidict = ">=4.0"
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.11"
-content-hash = "46a25235de52a32666e6b4497200a77cc5147017ccaeb06b5dd5b9d18f191a4d"
+content-hash = "696eb822323b2ad2c1af0694993138ed3dcef99d379ed7f81feb5a9cef7cf457"
