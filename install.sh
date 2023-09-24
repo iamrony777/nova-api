@@ -6,4 +6,4 @@ curl -sSL https://install.python-poetry.org | python -
 echo -e "Updating PATH"
 echo 'export PATH=$HOME/.local/bin:$PATH' >> ~/.bashrc
 
-exec $SHELL && poetry --version
+exec $SHELL
