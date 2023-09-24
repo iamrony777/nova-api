@@ -12,6 +12,7 @@ pyyaml = "*"
 rich = "*"
 tiktoken = "*"
 uvicorn = {extras = ["standard"], version = "*"}
+slowapi = "*"
 
 [dev-packages]
 
