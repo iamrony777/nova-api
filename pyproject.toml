@@ -22,6 +22,9 @@ aiocache = "^0.12.2"
 profanity-check = {git = "https://github.com/vzhou842/profanity-check.git"}
 
 
+[tool.poetry.group.dev.dependencies]
+numpy = ">=1.11.0"
+
 [build-system]
 requires = ["poetry-core"]
 build-backend = "poetry.core.masonry.api"
