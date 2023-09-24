@@ -4,19 +4,19 @@ verify_ssl = true
 name = "pypi"
 
 [packages]
-httpx = {extras = ["http2"], version = "*"}
 motor = "*"
 openai = "*"
 python-dotenv = "*"
 pyyaml = "*"
 rich = "*"
 tiktoken = "*"
-uvicorn = {extras = ["standard"], version = "*"}
+uvicorn = "*"
 slowapi = "*"
 orjson = "*"
 aiocache = "*"
 profanity-check = "*"
 scikit-learn = "==0.20.2"
+httpx = {extras = ["http2"], version = "*"}
 
 [dev-packages]
 numpy = ">=1.8.2"
